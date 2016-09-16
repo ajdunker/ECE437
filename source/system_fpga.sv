@@ -1,9 +1,5 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  system fpga wrapper. Maps board control.
-*/
+// Alex Dunker
+// adunker@purdue.edu
 
 // interface
 `include "system_if.vh"

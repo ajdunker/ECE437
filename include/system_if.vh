@@ -1,9 +1,7 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
+// Alex Dunker
+// adunker@purdue.edu
 
-  system interface
-*/
+
 `ifndef SYSTEM_IF_VH
 `define SYSTEM_IF_VH
 

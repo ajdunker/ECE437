@@ -1,10 +1,5 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  system top block wraps processor(datapath+cache)
-  and memory (ram).
-*/
+// Alex Dunker
+// adunker@purdue.edu
 
 // system interface
 `include "system_if.vh"

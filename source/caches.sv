@@ -1,9 +1,5 @@
-/*
-  Eric Villasenor
-  evillase@gmail.com
-
-  this block holds the i and d cache
-*/
+// Alex Dunker
+// adunker@purdue.edu
 
 
 // interfaces
