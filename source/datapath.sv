@@ -101,18 +101,18 @@ module datapath (
   assign luiImm = {pfif.IF_Instr_OUT[15:0], 16'h0000};
   assign shamt = {24'h000000, 3'b000, pfif.IF_Instr_OUT[10:6]};
 
-  assign pdif.ID_jump_IN = cuif.jump_t;
-  assign pdif.ID_RegDest_IN = cuif.RegDest;
-  assign pdif.ID_RegWen_IN = cuif.RegWen;
-  assign pdif.ID_ALUSrc1_IN = rfif.rdat1;
-  assign pdif.ID_ALUSrc2_IN = (cuif.ALUsrc == 3'b000) ? rfif.rdat2 : ((cuif.ALUsrc == 3'b001) ? signedExtImm : ((cuif.ALUsrc == 3'b010) ? zeroExtImm : (cuif.ALUsrc == 3'b011) ? luiImm : shamt));
-  assign pdif.ID_rdat2_IN = rfif.rdat2;
   assign pdif.ID_alu_op_IN = cuif.alu_op;
   assign pdif.ID_mem2reg_IN = cuif.mem2reg;
   assign pdif.ID_pc2reg_IN = cuif.pc2reg;
   assign pdif.ID_MemWrite_IN = cuif.MemWrite;
   assign pdif.ID_careOF_IN = cuif.careOF;
   assign pdif.ID_halt_IN = cuif.halt;
+  assign pdif.ID_jump_IN = cuif.jump_t;
+  assign pdif.ID_RegDest_IN = cuif.RegDest;
+  assign pdif.ID_RegWen_IN = cuif.RegWen;
+  assign pdif.ID_ALUSrc1_IN = rfif.rdat1;
+  assign pdif.ID_ALUSrc2_IN = (cuif.ALUsrc == 3'b000) ? rfif.rdat2 : ((cuif.ALUsrc == 3'b001) ? signedExtImm : ((cuif.ALUsrc == 3'b010) ? zeroExtImm : (cuif.ALUsrc == 3'b011) ? luiImm : shamt));
+  assign pdif.ID_rdat2_IN = rfif.rdat2;
 
   /************************************************
                   Instruction Decode
