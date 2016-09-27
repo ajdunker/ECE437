@@ -9,12 +9,14 @@
 
 `include "cpu_types_pkg.vh"
 `include "pipeline_fetch_if.vh"
+`include "hazard_unit_if.vh"
 
 import cpu_types_pkg::*;
 
 module pipeline_fetch (
 	input logic CLK, nRST,
-	pipeline_fetch_if pfif
+	pipeline_fetch_if pfif,
+	hazard_unit_if huif
 );
 
 	//IF inputs
@@ -26,8 +28,10 @@ module pipeline_fetch (
 			IF_Instr <= '0;
 	  		IF_npc <= '0;
 		end else begin
-			IF_Instr <= pfif.IF_Instr_IN;
-			IF_npc <= pfif.IF_npc_IN;
+			if(~huif.stall) begin
+				IF_Instr <= pfif.IF_Instr_IN;
+				IF_npc <= pfif.IF_npc_IN;
+			end
 		end
 	end
 

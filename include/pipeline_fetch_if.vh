@@ -20,6 +20,7 @@ import cpu_types_pkg::*;
 	//fetch inputs
 	logic [31:0] IF_Instr_IN;
 	logic [31:0] IF_npc_IN;
+	logic flush;
 
 	//fetch outputs
 	logic [31:0] IF_Instr_OUT;
