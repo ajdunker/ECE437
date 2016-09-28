@@ -136,6 +136,7 @@ module datapath (
   assign next_pc_br = (branch_off << 2) + pdif.ID_npc_OUT;
 
   always_comb begin
+    next_pc_reg = pdif.ID_ALUSrc1_OUT;
     casez(fuif.ForwardA)
       0 : begin
         next_pc_reg = pdif.ID_ALUSrc1_OUT;
@@ -200,6 +201,7 @@ module datapath (
 
   //assign peif.EX_wdat_IN = pdif.ID_rdat2_OUT;
   always_comb begin
+    peif.EX_wdat_IN = pdif.ID_rdat2_OUT;
     casez(fuif.ForwardB)
       0 : begin
         peif.EX_wdat_IN = pdif.ID_rdat2_OUT;
@@ -259,6 +261,9 @@ module datapath (
   //assign alif.port_b = pdif.ID_ALUSrc2_OUT;
 
   always_comb begin
+    alif.port_a = pdif.ID_ALUSrc1_OUT;
+    alif.port_b = pdif.ID_ALUSrc2_OUT;
+
     casez(fuif.ForwardA)
       0 : begin
         alif.port_a = pdif.ID_ALUSrc1_OUT;
