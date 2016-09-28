@@ -128,14 +128,14 @@ module datapath (
 
   // next pc for reg jump
   //assign next_pc_reg = rfif.rdat1;
-  assign next_pc_reg = pdif.ID_ALUSrc1_OUT;
+  //assign next_pc_reg = pdif.ID_ALUSrc1_OUT;
   // next pc for branch
   //assign next_pc_br = (signedExtImm << 2) + pc4;
   logic [31:0] branch_off;
   assign branch_off = (pdif.ID_Instr_OUT[15] == 0) ? {16'h0000, pdif.ID_Instr_OUT[15:0]} : {16'hffff, pdif.ID_Instr_OUT[15:0]};
   assign next_pc_br = (branch_off << 2) + pdif.ID_npc_OUT;
 
-  /*always_comb begin
+  always_comb begin
     casez(fuif.ForwardA)
       0 : begin
         next_pc_reg = pdif.ID_ALUSrc1_OUT;
@@ -153,7 +153,7 @@ module datapath (
         next_pc_reg = peif.EX_result_OUT;
       end
     endcase
-  end*/
+  end
 
   /************************************************
                         Jump Logic
