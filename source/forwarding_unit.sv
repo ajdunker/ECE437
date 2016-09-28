@@ -37,10 +37,12 @@ module forwarding_unit (
 
 		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rs) && ((peif.EX_RegDest_OUT != rs) || (peif.EX_RegWen_OUT == 0))) begin
 			fuif.ForwardA = 1;
-		end else if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rt) && ((peif.EX_RegDest_OUT != rt) || (peif.EX_RegWen_OUT == 0))) begin
-			fuif.ForwardB = 1;
 		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rs)) begin
 			fuif.ForwardA = 2;
+		end 
+
+		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rt) && ((peif.EX_RegDest_OUT != rt) || (peif.EX_RegWen_OUT == 0))) begin
+			fuif.ForwardB = 1;
 		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rt) && (rs != rt)) begin
 			fuif.ForwardB = 2;
 		end

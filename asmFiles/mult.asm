@@ -1,8 +1,8 @@
 org 0x0000
 
 ori $29, $0, 0xfffc			#initialize stack
-ori $11, $0, 0x00BC			#num 1
-ori $12, $0, 0x0014			#num 2
+ori $11, $0, 0x0002			#num 1
+ori $12, $0, 0x0003			#num 2
 
 push $11					#push num1 to stack
 push $12					#push num2 to stack

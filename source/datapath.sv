@@ -289,7 +289,7 @@ module datapath (
       end
 
       1 : begin
-        if (pdif.ID_MemWrite_OUT) begin
+        if (pdif.ID_MemWrite_OUT || cuif.ALUsrc == 1) begin
           alif.port_b = pdif.ID_ALUSrc2_OUT;
         end else begin
           if (pmif.MEM_mem2reg_OUT) begin
