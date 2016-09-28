@@ -158,10 +158,12 @@ module datapath (
   /************************************************
                         Jump Logic
   * ***********************************************/
+  assign pfif.flush = (~huif.stall) ? branching : 0;
+
   always_comb begin
     next_pc = 0;
     branching = 0;
-    case(cuif.jump_t)
+    case(pdif.ID_jump_OUT)
       0 : begin                     //Normal
         next_pc = pc4;
       end
