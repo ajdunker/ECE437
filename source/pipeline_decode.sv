@@ -54,7 +54,7 @@ module pipeline_decode (
 			ID_careOF <= 0;
 			ID_halt <= 0;
 		end else begin
-			if(huif.stall) begin
+			if(huif.stall || pfif.flush) begin
 				ID_Instr <= 0;
 				ID_npc <= 0;
 				ID_jump <= 0;

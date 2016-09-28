@@ -39,7 +39,7 @@ module forwarding_unit (
 			fuif.ForwardA = 2;
 		end
 
-		if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rt)) begin
+		if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rt) && (rs != rt)) begin
 			fuif.ForwardB = 2;
 		end
 

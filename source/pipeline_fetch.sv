@@ -28,9 +28,12 @@ module pipeline_fetch (
 			IF_Instr <= '0;
 	  		IF_npc <= '0;
 		end else begin
-			if(~huif.stall) begin
+			if(~huif.stall && ~pfif.flush) begin
 				IF_Instr <= pfif.IF_Instr_IN;
 				IF_npc <= pfif.IF_npc_IN;
+			end else if (pfif.flush) begin
+				IF_Instr <= '0;
+				IF_npc <= '0;
 			end
 		end
 	end
