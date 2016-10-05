@@ -55,11 +55,11 @@ module datapath (
 
   pipeline_fetch PF (CLK, nRST, pfif, huif);
   pipeline_decode PD (CLK, nRST, pfif, pdif, huif);
-  pipeline_execute PE (CLK, nRST, pfif, pdif, peif);
-  pipeline_memory PM (CLK, nRST, pfif, pdif, peif, pmif);
+  pipeline_execute PE (CLK, nRST, pfif, pdif, peif, huif);
+  pipeline_memory PM (CLK, nRST, pfif, pdif, peif, pmif, huif);
 
   forwarding_unit FU (CLK, nRST, fuif, peif, pdif, pmif);
-  hazard_unit HU (CLK, nRST, huif, pfif, pdif);
+  hazard_unit HU (CLK, nRST, huif, pfif, pdif, dpif);
 
   logic branching;
 

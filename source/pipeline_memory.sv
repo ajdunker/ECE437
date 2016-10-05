@@ -12,6 +12,8 @@
 `include "pipeline_decode_if.vh"
 `include "pipeline_execute_if.vh"
 `include "pipeline_memory_if.vh"
+`include "hazard_unit_if.vh"
+
 
 import cpu_types_pkg::*;
 
@@ -20,7 +22,8 @@ module pipeline_memory (
 	pipeline_fetch_if pfif,
 	pipeline_decode_if pdif,
 	pipeline_execute_if peif,
-	pipeline_memory_if pmif
+	pipeline_memory_if pmif,
+	hazard_unit_if huif
 );
 
 	logic [31:0] MEM_npc;
@@ -43,14 +46,16 @@ module pipeline_memory (
 			MEM_mem2reg <= 0;
 			MEM_halt <= 0;
 		end else begin
-			MEM_npc <= peif.EX_npc_OUT;
-			MEM_rdat <= pmif.MEM_rdat_IN;
-			MEM_result <= peif.EX_result_OUT;
-			MEM_RegDest <= peif.EX_RegDest_OUT;
-			MEM_RegWen <= peif.EX_RegWen_OUT;
-			MEM_mem2reg <= peif.EX_mem2reg_OUT;
-			MEM_pc2reg <= peif.EX_pc2reg_OUT;
-			MEM_halt <= peif.EX_halt_OUT;
+			if (huif.hit_check) begin
+				MEM_npc <= peif.EX_npc_OUT;
+				MEM_rdat <= pmif.MEM_rdat_IN;
+				MEM_result <= peif.EX_result_OUT;
+				MEM_RegDest <= peif.EX_RegDest_OUT;
+				MEM_RegWen <= peif.EX_RegWen_OUT;
+				MEM_mem2reg <= peif.EX_mem2reg_OUT;
+				MEM_pc2reg <= peif.EX_pc2reg_OUT;
+				MEM_halt <= peif.EX_halt_OUT;
+			end
 		end
 	end
 
