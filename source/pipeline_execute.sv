@@ -11,6 +11,8 @@
 `include "pipeline_fetch_if.vh"
 `include "pipeline_decode_if.vh"
 `include "pipeline_execute_if.vh"
+`include "hazard_unit_if.vh"
+
 
 import cpu_types_pkg::*;
 
@@ -18,7 +20,8 @@ module pipeline_execute (
 	input logic CLK, nRST,
 	pipeline_fetch_if pfif,
 	pipeline_decode_if pdif,
-	pipeline_execute_if peif
+	pipeline_execute_if peif,
+	hazard_unit_if huif
 );
 
 // execute
@@ -45,15 +48,17 @@ logic EX_halt;
 			EX_MemWrite <= 0;
 			EX_halt <= 0;
 		end else begin
-			EX_npc <= pdif.ID_npc_OUT;
-			EX_result <= peif.EX_result_IN;
-			EX_wdat <= peif.EX_wdat_IN;
-			EX_RegWen <= pdif.ID_RegWen_OUT;
-			EX_RegDest <= peif.EX_RegDest_IN;
-			EX_mem2reg <= pdif.ID_mem2reg_OUT;
-			EX_pc2reg <= pdif.ID_pc2reg_OUT;
-			EX_MemWrite <= pdif.ID_MemWrite_OUT;
-			EX_halt <= pdif.ID_halt_OUT;
+			if (huif.hit_check) begin
+				EX_npc <= pdif.ID_npc_OUT;
+				EX_result <= peif.EX_result_IN;
+				EX_wdat <= peif.EX_wdat_IN;
+				EX_RegWen <= pdif.ID_RegWen_OUT;
+				EX_RegDest <= peif.EX_RegDest_IN;
+				EX_mem2reg <= pdif.ID_mem2reg_OUT;
+				EX_pc2reg <= pdif.ID_pc2reg_OUT;
+				EX_MemWrite <= pdif.ID_MemWrite_OUT;
+				EX_halt <= pdif.ID_halt_OUT;
+			end
 		end
 	end
 
