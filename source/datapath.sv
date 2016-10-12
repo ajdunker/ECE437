@@ -115,6 +115,7 @@ module datapath (
   assign pdif.ID_jump_IN = cuif.jump_t;
   assign pdif.ID_RegDest_IN = cuif.RegDest;
   assign pdif.ID_RegWen_IN = cuif.RegWen;
+  assign pdif.ID_ALUsrc_IN = cuif.ALUsrc;
   assign pdif.ID_ALUSrc1_IN = rfif.rdat1;
   assign pdif.ID_ALUSrc2_IN = (cuif.ALUsrc == 3'b000) ? rfif.rdat2 : ((cuif.ALUsrc == 3'b001) ? signedExtImm : ((cuif.ALUsrc == 3'b010) ? zeroExtImm : (cuif.ALUsrc == 3'b011) ? luiImm : shamt));
   assign pdif.ID_rdat2_IN = rfif.rdat2;
@@ -289,7 +290,7 @@ module datapath (
       end
 
       1 : begin
-        if (pdif.ID_MemWrite_OUT || cuif.ALUsrc == 1) begin
+        if (pdif.ID_MemWrite_OUT || pdif.ID_ALUsrc_OUT) begin
           alif.port_b = pdif.ID_ALUSrc2_OUT;
         end else begin
           if (pmif.MEM_mem2reg_OUT) begin
