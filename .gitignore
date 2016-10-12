@@ -13,3 +13,4 @@ README
 *.hex
 *.ver
 *.summary
+testasm.diff
