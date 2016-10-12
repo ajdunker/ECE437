@@ -18,7 +18,7 @@
 // mapped timing needs this. 1ns is too fast
 `timescale 1 ns / 1 ns
 
-module register_file_tb;
+module hazard_unit_tb;
 
   parameter PERIOD = 10;
 
@@ -32,7 +32,7 @@ module register_file_tb;
   pipeline_fetch_if pfif();
   pipeline_decode_if pdif();
   // test program
-  test PROG ();
+  test PROG (CLK, nRST, huif, pfif, pdif);
 
   pipeline_fetch PF (CLK, nRST, pfif, huif);
   pipeline_decode PD (CLK, nRST, pfif, pdif, huif);
@@ -61,9 +61,15 @@ program test(
 
     @(posedge CLK);
 
-    pdif.ID_mem2reg_OUT = 0;
-    
+    //pdif.ID_Instr_IN[20:16] = 5;
 
+    pfif.IF_Instr_IN = '1;
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+    @(posedge CLK);
+
+    pdif.ID_mem2reg_IN = 1;
 
 
   end

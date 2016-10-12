@@ -28,23 +28,23 @@ always_ff @ (SW[17]) begin
 end
 
 //Input port assignments
-assign aluif.portb = regb;
-assign aluif.porta = {15'b000000000000000,SW[16:0]};
+assign aluif.port_b = regb;
+assign aluif.port_a = {15'b000000000000000,SW[16:0]};
 
 //ALU OP code assignment
-assign aluif.aluop[0] = !KEY[0];
-assign aluif.aluop[1] = !KEY[1];
-assign aluif.aluop[2] = !KEY[2];
-assign aluif.aluop[3] = !KEY[3];
+assign aluif.alu_op[0] = !KEY[0];
+assign aluif.alu_op[1] = !KEY[1];
+assign aluif.alu_op[2] = !KEY[2];
+assign aluif.alu_op[3] = !KEY[3];
 
 //Flag assignments
-assign LEDR[2] = aluif.v_flag;
-assign LEDR[1] = aluif.n_flag;
-assign LEDR[0] = aluif.z_flag;
+assign LEDR[2] = aluif.v_fl;
+assign LEDR[1] = aluif.n_fl;
+assign LEDR[0] = aluif.z_fl;
 
 //7 Segment Mapping / Output port assignments
 always_comb begin
-  case (aluif.porto[3:0])
+  case (aluif.port_o[3:0])
     'h0: HEX0 = 7'b1000000;
     'h1: HEX0 = 7'b1111001;
     'h2: HEX0 = 7'b0100100;
@@ -63,7 +63,7 @@ always_comb begin
     'hf: HEX0 = 7'b0001110;
   endcase
 
-  case (aluif.porto[7:4])
+  case (aluif.port_o[7:4])
     'h0: HEX1 = 7'b1000000;
     'h1: HEX1 = 7'b1111001;
     'h2: HEX1 = 7'b0100100;
@@ -82,7 +82,7 @@ always_comb begin
     'hf: HEX1 = 7'b0001110;
   endcase
 
-  case (aluif.porto[11:8])
+  case (aluif.port_o[11:8])
     'h0: HEX2 = 7'b1000000;
     'h1: HEX2 = 7'b1111001;
     'h2: HEX2 = 7'b0100100;
@@ -101,7 +101,7 @@ always_comb begin
     'hf: HEX2 = 7'b0001110;
   endcase
 
-  case (aluif.porto[15:12])
+  case (aluif.port_o[15:12])
     'h0: HEX3 = 7'b1000000;
     'h1: HEX3 = 7'b1111001;
     'h2: HEX3 = 7'b0100100;
@@ -120,7 +120,7 @@ always_comb begin
     'hf: HEX3 = 7'b0001110;
   endcase
 
-  case (aluif.porto[19:16])
+  case (aluif.port_o[19:16])
     'h0: HEX4 = 7'b1000000;
     'h1: HEX4 = 7'b1111001;
     'h2: HEX4 = 7'b0100100;
@@ -139,7 +139,7 @@ always_comb begin
     'hf: HEX4 = 7'b0001110;
   endcase
 
-  case (aluif.porto[23:20])
+  case (aluif.port_o[23:20])
     'h0: HEX5 = 7'b1000000;
     'h1: HEX5 = 7'b1111001;
     'h2: HEX5 = 7'b0100100;
@@ -158,7 +158,7 @@ always_comb begin
     'hf: HEX5 = 7'b0001110;
   endcase
 
-  case (aluif.porto[27:24])
+  case (aluif.port_o[27:24])
     'h0: HEX6 = 7'b1000000;
     'h1: HEX6 = 7'b1111001;
     'h2: HEX6 = 7'b0100100;
@@ -177,7 +177,7 @@ always_comb begin
     'hf: HEX6 = 7'b0001110;
   endcase
 
-  case (aluif.porto[31:28])
+  case (aluif.port_o[31:28])
     'h0: HEX7 = 7'b1000000;
     'h1: HEX7 = 7'b1111001;
     'h2: HEX7 = 7'b0100100;
