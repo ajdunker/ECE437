@@ -13,5 +13,9 @@ README
 *.hex
 *.ver
 *.summary
+<<<<<<< HEAD
 *.sv~
 asmFiles/testHazard.asm
+=======
+testasm.diff
+>>>>>>> 95dcf23d4a65defde46c40e17cf9cadae5be5eee

@@ -35,15 +35,15 @@ module forwarding_unit (
 		fuif.ForwardA = 0;
 		fuif.ForwardB = 0;
 
-		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rs) && ((peif.EX_RegDest_OUT != rs) || (peif.EX_RegWen_OUT == 0))) begin
+		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rs && pmif.MEM_RegDest_OUT != 0) && ((peif.EX_RegDest_OUT != rs) || (peif.EX_RegWen_OUT == 0))) begin
 			fuif.ForwardA = 1;
-		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rs)) begin
+		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rs && peif.EX_RegDest_OUT != 0)) begin
 			fuif.ForwardA = 2;
 		end 
 
-		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rt) && ((peif.EX_RegDest_OUT != rt) || (peif.EX_RegWen_OUT == 0))) begin
+		if (pmif.MEM_RegWen_OUT && (pmif.MEM_RegDest_OUT == rt && pmif.MEM_RegDest_OUT != 0) && ((peif.EX_RegDest_OUT != rt) || (peif.EX_RegWen_OUT == 0))) begin
 			fuif.ForwardB = 1;
-		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rt) && (rs != rt)) begin
+		end else if (peif.EX_RegWen_OUT && (peif.EX_RegDest_OUT == rt && peif.EX_RegDest_OUT != 0) && (rs != rt)) begin
 			fuif.ForwardB = 2;
 		end
 
