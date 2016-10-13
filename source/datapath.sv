@@ -321,13 +321,13 @@ module datapath (
     if (nRST == 0) begin
       halt_ff1 <= 0;
     end else begin
-      if (halt_ff) begin
+      if (pmif.MEM_halt_OUT) begin
         halt_ff1 <= 1;
       end
     end
   end
 
-  assign halt_ff = (pdif.ID_careOF_OUT == 1) ? ((alif.v_fl == 1) ? 1 : 0) : pmif.MEM_halt_OUT;
+  //assign halt_ff = (pdif.ID_careOF_OUT == 1) ? ((alif.v_fl == 1) ? 1 : 0) : pmif.MEM_halt_OUT;
 
   /************************************************
                   DPIF Wiring
