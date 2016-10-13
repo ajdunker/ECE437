@@ -13,3 +13,5 @@ README
 *.hex
 *.ver
 *.summary
+*.sv~
+asmFiles/testHazard.asm
