@@ -59,7 +59,7 @@ module datapath (
   pipeline_memory PM (CLK, nRST, pfif, pdif, peif, pmif, huif);
 
   forwarding_unit FU (CLK, nRST, fuif, peif, pdif, pmif);
-  hazard_unit HU (CLK, nRST, huif, pfif, pdif, dpif);
+  hazard_unit HU (CLK, nRST, dpif.ihit, dpif.dhit, huif, pfif, pdif);
 
   logic branching;
 
