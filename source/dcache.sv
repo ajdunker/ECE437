@@ -21,7 +21,7 @@ module dcache (
 	logic [1:0][7:0][91:0] cacheReg;
 	logic [1:0][7:0][91:0] n_cacheReg;
 
-	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT} state_type;
+	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH} state_type;
 	state_type state, n_state;
 
 	logic [25:0] tag;
@@ -231,6 +231,7 @@ module dcache (
 			end
 
 			ALLOCATE1 : begin
+
 				cif.dREN = 1;
 				cif.daddr = dcif.dmemaddr;
 
@@ -251,6 +252,7 @@ module dcache (
 			end
 
 			ALLOCATE2 : begin
+
 				cif.dREN = 1;
 				if(!dcif.dmemaddr[2]) begin
 					d_other_addr = dcif.dmemaddr + 4;
@@ -292,6 +294,7 @@ module dcache (
 			end
 
 			WBACK1 : begin
+
 				cif.dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0;
 				cif.daddr = {cacheReg[acc_map[d_index]][d_index][89:64], dcif.dmemaddr[5:2], 2'b00};
@@ -366,10 +369,24 @@ module dcache (
 			end
 
 			HIT_CNT : begin
-				cif.daddr = 'h3100;
-				cif.dstore = hitT;
-				n_state = HIT_CNT;
+				if(!cif.dwait) begin
+					n_state = END_FLUSH;
+				end else begin
+					n_state = HIT_CNT;
+				end
+				cif.daddr = 32'h3100; //set to write hit count to 3100
+				cif.dstore = hitT+16; //store the hit count
+				//n_flushReg = 1;
+				cif.dREN = 0;
+				cif.dWEN = 1;
+			end
+			
+			END_FLUSH: begin
+				cif.dREN = 0;
+				cif.dWEN = 0;
 				n_flushReg = 1;
+				cif.daddr = word_t'('0);
+				n_state = END_FLUSH;
 			end
 		endcase
 	end
