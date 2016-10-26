@@ -33,7 +33,7 @@ module dcache
 	logic [1:0] d_same_tag;
 	logic [7:0] acc_map, n_acc_map;
 	logic [31:0] d_other_addr;
-	logic [31:0] hitCount, n_hitCount;
+	logic [31:0] hitCount, n_hitCount, missCount, n_missCount;
 	logic [3:0]  count, n_count;
 	logic flushReg, n_flushReg;
 	logic test;
@@ -50,6 +50,7 @@ module dcache
 			hitCount <= '0;
 			count <= '0;
 			flushReg <= '0;
+			missCount <= '0;
 		end else begin
 			cacheReg <= n_cacheReg;
 			state <= n_state;
@@ -57,6 +58,7 @@ module dcache
 			hitCount <= n_hitCount;
 			count <= n_count;
 			flushReg <= n_flushReg;
+			missCount <= n_missCount;
 		end
 	end
  
@@ -199,6 +201,7 @@ module dcache
 		d_other_addr = dcif.dmemaddr;
 		n_acc_map = acc_map;
 		n_hitCount = hitCount;
+		n_missCount = missCount;
 		n_count = count;
 		n_flushReg = 0;
 
@@ -208,15 +211,17 @@ module dcache
 					if(d_same_tag != 2'b10) begin
 						if (d_same_tag == 2'b00 && validCheck0 == 1) begin 
 							dcif.dhit = 1;
+							n_acc_map[d_index] = 1;
 							n_hitCount = hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 1;                                             
 						end else if (validCheck1 == 1 && d_same_tag == 2'b01) begin 
 							dcif.dhit = 1;
+							n_acc_map[d_index] = 0;
 							n_hitCount=hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 0;
-						end else begin
+						end /*else begin
 							if ((!validCheck0) || (!validCheck1)) begin
 								if (!validCheck0) begin
 									n_acc_map[d_index] = 0;
@@ -229,9 +234,9 @@ module dcache
 								end else begin
 									n_acc_map[d_index] = 1;
 								end
-							end
-						end
-					end else begin
+							end*/
+						
+					end /*else begin
 						if((!validCheck0) || (!validCheck1)) begin
 							if (!validCheck0) begin
 								n_acc_map[d_index] = 0;
@@ -245,10 +250,11 @@ module dcache
 								n_acc_map[d_index] = 1;
 							end
 						end
-					end
+					end*/
 				end else if (dcif.dmemWEN) begin
 					if (d_same_tag == 2'b00) begin
 						dcif.dhit = 1;
+						n_acc_map[d_index] = 1;
 						if(validCheck0==1) begin
 							n_hitCount=hitCount + 1; //add to hit counter
 						end
@@ -264,13 +270,14 @@ module dcache
 						end
 					end else if (d_same_tag == 2'b01) begin
 						dcif.dhit = 1;
+						n_acc_map[d_index] = 0;
 
 						if(validCheck1==1) begin
 							n_hitCount=hitCount + 1; //add to hit counter
 						end
 
 						if(acc_map[d_index] == d_same_tag) begin
-							n_acc_map[d_index]=acc_map[d_index]+1;
+							n_acc_map[d_index] = acc_map[d_index] + 1;
 						end
 
 						n_cacheReg[1][d_index][90] = 1;
@@ -281,7 +288,7 @@ module dcache
 						end else begin
 							n_cacheReg[1][d_index][31:0] = dcif.dmemstore;
 						end
-					end else begin
+					end /*else begin
 						if(!validCheck0) begin
 							n_acc_map[d_index] = 0;
 						end else if(!validCheck1) begin
@@ -290,8 +297,8 @@ module dcache
 							n_acc_map[d_index] = 0;
 						end else if (!dirtyCheck1) begin
 							n_acc_map[d_index] = 1;
-						end	
-					end
+						end
+					end*/
 				end
 			end
 
@@ -328,9 +335,10 @@ module dcache
 				end
 				
 				if(!cif.dwait) begin
-					n_acc_map[d_index] = acc_map[d_index]+1;
-					dcif.dhit = 1;
 
+					n_acc_map[d_index] = acc_map[d_index]+1;
+					//dcif.dhit = 1;
+					n_missCount = missCount + 1;
 					if(d_other_addr[2]) begin
 						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32] = cif.dload;
 					end else begin
@@ -400,7 +408,7 @@ module dcache
 
 			HIT_CNT : begin
 				cif.daddr = 32'h3100; //set to write hit count to 3100
-				cif.dstore = hitCount; //store the hit count
+				cif.dstore = hitCount - missCount; //store the hit count
 				cif.dREN = 0;
 				cif.dWEN = 1;
 			end
