@@ -45,9 +45,15 @@ program test(
 		nRST = 1'b1;
 		#(PERIOD*1);
 
+<<<<<<< HEAD
+		//load in deadbeef
+		dcif.dmemaddr = 32'h00000000;
+		dcif.dmemstore = 32'hdeadbeef;
+=======
 		//load in something
 		dcif.dmemaddr = 32'h00000000;
 		dcif.dmemstore = 32'hballoons;
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemREN = 1'b1;
 		dcif.dmemWEN = 1'b0;
 		dcif.halt = 1'b0;
@@ -55,9 +61,15 @@ program test(
 		cif.dload = 32'hffffffff;
 
 		#(PERIOD*1);
+<<<<<<< HEAD
+		//load it in the other way
+		dcif.dmemaddr = 32'hffff0000;
+		dcif.dmemstore = 32'hdeadbeef;
+=======
 		//load it into the other side
 		dcif.dmemaddr = 32'hffff0000;
 		dcif.dmemstore = 32'hballoons;
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemREN = 1'b1;
 		dcif.dmemWEN = 1'b0;
 		dcif.halt = 1'b0;
@@ -111,6 +123,10 @@ program test(
 
 
 		#(PERIOD*1);
+<<<<<<< HEAD
+		//datapath read hit way0
+=======
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemaddr = 32'b00000000000000000000000000000000;
 		dcif.dmemstore = 32'hbad1bad1;
 		dcif.dmemREN = 1'b1;
@@ -120,6 +136,10 @@ program test(
 		cif.dload[CPUID] = 32'hbad1bad1;
 
 		#(PERIOD*1);
+<<<<<<< HEAD
+		//datapath read hit way1
+=======
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemaddr = 32'hffff0000;
 		dcif.dmemstore = 32'hbad1bad1;
 		dcif.dmemREN = 1'b1;
@@ -132,7 +152,11 @@ program test(
 
 		#(PERIOD*1);
 		//eviction on read clean
+<<<<<<< HEAD
+		dcif.dmemaddr = 32'b10101010101000000000000000000000; // should replace way0, index0
+=======
 		dcif.dmemaddr = 32'b10101010101000000000000000000000;
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemstore = 32'hbad1bad1;
 		dcif.dmemREN = 1'b1;
 		dcif.dmemWEN = 1'b0;
@@ -142,7 +166,11 @@ program test(
 
 		#(PERIOD*1);
 		//eviction on write clean
+<<<<<<< HEAD
+		dcif.dmemaddr = 32'b01010101010100000000000000000000; // should replace way1, index0
+=======
 		dcif.dmemaddr = 32'b01010101010100000000000000000000;
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
 		dcif.dmemstore = 32'hFEEDBEEF;
 		dcif.dmemREN = 1'b0;
 		dcif.dmemWEN = 1'b1;
@@ -166,4 +194,8 @@ program test(
 
 		#(PERIOD*5);
 	end
+<<<<<<< HEAD
 endprogram
+=======
+endprogram
+>>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
