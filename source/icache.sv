@@ -75,3 +75,9 @@ module icache (input logic CLK, nRST, datapath_cache_if dcif, caches_if cif);
   	end
 
 endmodule
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> master

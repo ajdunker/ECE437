@@ -17,6 +17,7 @@ module dcache (
 );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	/**** D_Cache****/
 	//8 slots each sid, total 1024 bits
 	//valid[91], dirty[90], tag[89:64], data1[63:32], data2[31:0]
@@ -94,6 +95,8 @@ module dcache (
 	always_comb begin
 		//set default values
 =======
+=======
+>>>>>>> master
 	//92 bits wide, 8 rows, 2 pieces of data per row
 
 	logic [1:0][7:0][91:0] cacheReg;
@@ -173,20 +176,27 @@ module dcache (
 	end
 
 	always_comb begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 		n_state = IDLE;
 		n_cacheReg = cacheReg;
 		dcif.dmemload = 0;
 		dcif.dhit = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 		cif.dREN = 0;
 		cif.dWEN = 0;
 		cif.daddr = dcif.dmemaddr;
 		cif.dstore = 0;
 		d_other_addr = dcif.dmemaddr;
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 		n_acc_map = acc_map; //store index least used
@@ -194,12 +204,16 @@ module dcache (
 =======
 		n_acc_map = acc_map;
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+		n_acc_map = acc_map;
+>>>>>>> master
 		n_hitT = hitT;
 		n_count = count;
 		n_flushReg = 0;
 
 		casez (state)
 			IDLE : begin
+<<<<<<< HEAD
 <<<<<<< HEAD
 				if(dcif.dmemREN) begin //read mode 
 					if(d_same_tag != 2'b10) begin //there is a potential match
@@ -211,6 +225,8 @@ module dcache (
 							n_state = IDLE;
 						end else if (valid_chk_1 == 1 && d_same_tag == 2'b01) begin//data match on block 1 
 =======
+=======
+>>>>>>> master
 				if(dcif.dmemREN) begin
 					if(d_same_tag != 2'b10) begin
 						if (d_same_tag == 2'b00 && validCheck0 == 1) begin 
@@ -220,12 +236,16 @@ module dcache (
 							n_acc_map[d_index] = 1;                                             
 							n_state = IDLE;
 						end else if (validCheck1 == 1 && d_same_tag == 2'b01) begin 
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 							dcif.dhit = 1;
 							n_hitT=hitT+1;
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 0;
 							n_state = IDLE;
+<<<<<<< HEAD
 <<<<<<< HEAD
 						end else begin //no match, requesting data from mem
 							if((!valid_chk_0) || (!valid_chk_1)) begin
@@ -274,6 +294,8 @@ module dcache (
 						dcif.dhit = 1;
 						if(valid_chk_0==1) begin
 =======
+=======
+>>>>>>> master
 						end else begin
 							if ((!validCheck0) || (!validCheck1)) begin
 								n_state = ALLOCATE1;
@@ -318,12 +340,16 @@ module dcache (
 					if (d_same_tag == 2'b00) begin
 						dcif.dhit = 1;
 						if(validCheck0==1) begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 							n_hitT=hitT+1;
 						end
 						if(acc_map[d_index] == d_same_tag) begin
 							n_acc_map[d_index]=acc_map[d_index]+1;
 						end
+<<<<<<< HEAD
 <<<<<<< HEAD
 						n_cacheReg[0][d_index][90] = 1; //set dirty
 						n_cacheReg[0][d_index][91] = 1; //set valid
@@ -333,6 +359,11 @@ module dcache (
 						n_cacheReg[0][d_index][91] = 1;
 						if (dcif.dmemaddr[2] == 1) begin
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+						n_cacheReg[0][d_index][90] = 1;
+						n_cacheReg[0][d_index][91] = 1;
+						if (dcif.dmemaddr[2] == 1) begin
+>>>>>>> master
 							n_cacheReg[0][d_index][63:32] = dcif.dmemstore;
 						end else begin
 							n_cacheReg[0][d_index][31:0] = dcif.dmemstore;  
@@ -341,10 +372,14 @@ module dcache (
 						dcif.dhit = 1;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 						if(valid_chk_1==1) begin
 =======
 						if(validCheck1==1) begin
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+						if(validCheck1==1) begin
+>>>>>>> master
 							n_hitT=hitT+1;
 						end
 
@@ -353,20 +388,27 @@ module dcache (
 						end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 						n_cacheReg[1][d_index][90] = 1; //set dirty
 						n_cacheReg[1][d_index][91] = 1; //set valid
 
 						if(dcif.dmemaddr[2] == 1) begin //check offset
 =======
+=======
+>>>>>>> master
 						n_cacheReg[1][d_index][90] = 1;
 						n_cacheReg[1][d_index][91] = 1;
 
 						if(dcif.dmemaddr[2] == 1) begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 							n_cacheReg[1][d_index][63:32] = dcif.dmemstore;
 						end else begin
 							n_cacheReg[1][d_index][31:0] = dcif.dmemstore;
 						end
+<<<<<<< HEAD
 <<<<<<< HEAD
 					end else begin //no match, may require wb
 						if(dcif.halt) begin
@@ -391,6 +433,8 @@ module dcache (
 					end
 				end else begin   //neither read nor write
 =======
+=======
+>>>>>>> master
 					end else begin
 						if(dcif.halt) begin
 							n_state = FLUSH1;
@@ -413,7 +457,10 @@ module dcache (
 						end
 					end
 				end else begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 					if(dcif.halt) begin
 						n_state = FLUSH1;
 					end else begin
@@ -422,6 +469,7 @@ module dcache (
 				end
 			end
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 			ALL1 : begin //alloc memory
 				cif.dREN = 1;
@@ -432,6 +480,8 @@ module dcache (
 
 				if(!cif.dwait) begin //done loading
 =======
+=======
+>>>>>>> master
 			ALLOCATE1 : begin
 
 				cif.dREN = 1;
@@ -441,13 +491,17 @@ module dcache (
 				n_cacheReg[acc_map[d_index]][d_index][91] = 1;
 
 				if(!cif.dwait) begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 					if(dcif.dmemaddr[2]) begin
 						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
 					end else begin
 						n_cacheReg[acc_map[d_index]][d_index][31:0] = cif.dload;
 					end
 					
+<<<<<<< HEAD
 <<<<<<< HEAD
 					n_state = ALL2;
 				end else begin  //not done yet
@@ -459,6 +513,8 @@ module dcache (
 				cif.dREN = 1;
 				if(!dcif.dmemaddr[2]) begin //low 32 bits
 =======
+=======
+>>>>>>> master
 					n_state = ALLOCATE2;
 				end else begin
 					n_state = ALLOCATE1;  
@@ -469,7 +525,10 @@ module dcache (
 
 				cif.dREN = 1;
 				if(!dcif.dmemaddr[2]) begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 					d_other_addr = dcif.dmemaddr + 4;
 				end else begin
 					d_other_addr = dcif.dmemaddr - 4;
@@ -478,9 +537,12 @@ module dcache (
 				cif.daddr = d_other_addr;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 				//get data just loaded
 =======
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 				if(dcif.dmemaddr[2]) begin
 					dcif.dmemload = cacheReg[acc_map[d_index]][d_index][63:32];  
 				end else begin
@@ -500,11 +562,15 @@ module dcache (
 
 					if(dcif.dmemWEN) begin
 <<<<<<< HEAD
+<<<<<<< HEAD
 						n_cacheReg[acc_map[d_index]][d_index][90] = 1; //set dirty
 						//n_cacheReg[acc_map[d_index]][d_index][91] = 1; //set valid
 =======
 						n_cacheReg[acc_map[d_index]][d_index][90] = 1;
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+						n_cacheReg[acc_map[d_index]][d_index][90] = 1;
+>>>>>>> master
 						
 						if (dcif.dmemaddr[2]) begin
 							n_cacheReg[acc_map[d_index]][d_index][63:32] = dcif.dmemstore;
@@ -514,6 +580,7 @@ module dcache (
 					end
 				end else begin
 <<<<<<< HEAD
+<<<<<<< HEAD
 					n_state = ALL2;  
 				end
 			end
@@ -522,6 +589,8 @@ module dcache (
 				cif.dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0; //not dirty after wb
 =======
+=======
+>>>>>>> master
 					n_state = ALLOCATE2;  
 				end
 			end
@@ -530,7 +599,10 @@ module dcache (
 
 				cif.dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0;
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 				cif.daddr = {cacheReg[acc_map[d_index]][d_index][89:64], dcif.dmemaddr[5:2], 2'b00};
 				if(dcif.dmemaddr[2]) begin
 					cif.dstore = cacheReg[acc_map[d_index]][d_index][63:32];
@@ -540,6 +612,7 @@ module dcache (
 
 				if(!cif.dwait) begin
 <<<<<<< HEAD
+<<<<<<< HEAD
 					n_state = WB2;
 				end else begin
 					n_state = WB1;  
@@ -548,6 +621,8 @@ module dcache (
 
 			WB2 : begin
 =======
+=======
+>>>>>>> master
 					n_state = WBACK2;
 				end else begin
 					n_state = WBACK1;  
@@ -555,7 +630,10 @@ module dcache (
 			end
 
 			WBACK2 : begin
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
 				cif.dWEN = 1;
 				if(!dcif.dmemaddr[2]) begin
 					d_other_addr = dcif.dmemaddr + 4;
@@ -573,6 +651,7 @@ module dcache (
 
 				if(!cif.dwait) begin
 <<<<<<< HEAD
+<<<<<<< HEAD
 					n_state = ALL1;
 				end else begin
 					n_state = WB2;
@@ -581,6 +660,11 @@ module dcache (
 				end else begin
 					n_state = WBACK2;
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+					n_state = ALLOCATE1;
+				end else begin
+					n_state = WBACK2;
+>>>>>>> master
 				end
 			end
 
@@ -589,10 +673,14 @@ module dcache (
 					cif.dWEN = 1;
 					cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b100};
 <<<<<<< HEAD
+<<<<<<< HEAD
 					cif.dstore = cacheReg[count[0]][count[3:1]][63:32]; //hight 32 bits
 =======
 					cif.dstore = cacheReg[count[0]][count[3:1]][63:32];
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+					cif.dstore = cacheReg[count[0]][count[3:1]][63:32];
+>>>>>>> master
 					if(!cif.dwait) begin
 						n_state = FLUSH2;
 					end else begin
@@ -610,10 +698,14 @@ module dcache (
 				cif.dWEN = 1;
 				cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b000};
 <<<<<<< HEAD
+<<<<<<< HEAD
 				cif.dstore = cacheReg[count[0]][count[3:1]][31:0]; //low 32 bits
 =======
 				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
+>>>>>>> master
 				if(!cif.dwait) begin
 					if (count == 15) begin
 						n_state = HIT_CNT;
@@ -649,10 +741,16 @@ module dcache (
 		endcase
 	end
 <<<<<<< HEAD
+<<<<<<< HEAD
 endmodule // dcache
 =======
+=======
+>>>>>>> master
 
 endmodule 
 
 
+<<<<<<< HEAD
 >>>>>>> 1919a2ea5b5e641c1059d7433b74df1f98905995
+=======
+>>>>>>> master
