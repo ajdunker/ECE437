@@ -1,29 +1,29 @@
 // Alex Dunker
 // adunker@purdue.edu
+//Mitch Bouma
+//mbouma@purdue.edu
 
 // dcache
 
 `include "datapath_cache_if.vh"
 `include "cache_control_if.vh"
-
 `include "cpu_types_pkg.vh"
 
 import cpu_types_pkg::*;
 
-module dcache (
+module dcache 
+(
 	input logic CLK, nRST,
 	datapath_cache_if dcif,
 	caches_if cif
 );
 
-	//92 bits wide, 8 rows, 2 pieces of data per row
-
-	logic [1:0][7:0][91:0] cacheReg;
-	logic [1:0][7:0][91:0] n_cacheReg;
-
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH} state_type;
 	state_type state, n_state;
 
+	//92 bits wide, 8 rows, 2 pieces of data per row
+	logic [1:0][7:0][91:0] cacheReg;
+	logic [1:0][7:0][91:0] n_cacheReg;
 	logic [25:0] tag;
 	logic [2:0] d_index;
 	logic [25:0] tagToCheck0, tagToCheck1;
@@ -33,10 +33,32 @@ module dcache (
 	logic [1:0] d_same_tag;
 	logic [7:0] acc_map, n_acc_map;
 	logic [31:0] d_other_addr;
-
-	logic [31:0] hitT, n_hitT;
+	logic [31:0] hitCount, n_hitCount;
 	logic [3:0]  count, n_count;
 	logic flushReg, n_flushReg;
+	logic test;
+
+	integer i;
+	always_ff @(posedge CLK, negedge nRST) begin
+	    	if (!nRST) begin
+				for (i=0;i<8;i++) begin
+					cacheReg[1][i][91:90]<=0;
+					cacheReg[0][i][91:90]<=0;
+				end
+				state <= IDLE;
+				acc_map <= '0;
+				hitCount <= '0;
+				count <= '0;
+				flushReg <= '0;
+	    	end else begin
+				cacheReg <= n_cacheReg;
+				state <= n_state;
+				acc_map <= n_acc_map;
+				hitCount <= n_hitCount;
+				count <= n_count;
+				flushReg <= n_flushReg;
+    		end
+	end
  
 	always_comb begin
 		tag = dcif.dmemaddr[31:6];
@@ -72,30 +94,101 @@ module dcache (
 		end
 	end
 
-	integer i;
-	always_ff @(posedge CLK, negedge nRST) begin
-	    	if (!nRST) begin
-				for (i=0;i<8;i++) begin
-					cacheReg[1][i][91:90]<=0;
-					cacheReg[0][i][91:90]<=0;
+	always_comb begin
+		n_state = IDLE;
+		casez (state)
+			IDLE: begin
+				if (dcif.dmemREN) begin
+					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) & (validCheck0 | validCheck1)) begin
+						n_state = IDLE;
+					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
+						n_state = ALLOCATE1;
+					end else if (dcif.halt) begin
+						n_state = FLUSH1;
+					end else begin
+						n_state = WBACK1;
+					end
+				end else if (dcif.dmemWEN) begin
+					if (d_same_tag != 2'b00 & d_same_tag != 2'b01) begin
+						if (dcif.halt) begin
+							n_state = FLUSH1;
+						end else if (!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1) begin
+							n_state = ALLOCATE1;
+						end else begin
+							n_state = WBACK1;
+						end
+					end
+				end else begin
+					if(dcif.halt) begin
+						n_state = FLUSH1;
+					end else begin
+						n_state = IDLE;  
+					end
 				end
-				state <= IDLE;
-				acc_map <= '0;
-				hitT <= '0;
-				count <= '0;
-				flushReg <= '0;
-	    	end else begin
-				cacheReg <= n_cacheReg;
-				state <= n_state;
-				acc_map <= n_acc_map;
-				hitT <= n_hitT;
-				count <= n_count;
-				flushReg <= n_flushReg;
-    		end
+			end
+			ALLOCATE1: begin
+				if (!cif.dwait) begin
+					n_state = ALLOCATE2;
+				end else begin
+					n_state = ALLOCATE1;
+				end
+			end 
+			ALLOCATE2: begin
+				if (!cif.dwait) begin
+					n_state = IDLE;
+				end else begin
+					n_state = ALLOCATE2; 
+				end
+			end
+			WBACK1: begin
+				if(!cif.dwait) begin
+					n_state = WBACK2;
+				end else begin
+					n_state = WBACK1;  
+				end
+			end
+			WBACK2: begin
+				if(!cif.dwait) begin
+					n_state = ALLOCATE1;
+				end else begin
+					n_state = WBACK2;
+				end
+			end
+			FLUSH1: begin
+				if ((cacheReg[count[0]][count[3:1]][90]) & !cif.dwait) begin
+					n_state = FLUSH2;
+				end else if (cacheReg[count[0]][count[3:1]][90]) begin
+					n_state = FLUSH1; 
+				end else if (count == 15) begin
+					n_state = HIT_CNT;
+				end else begin
+					n_state = FLUSH1; 
+				end
+			end
+			FLUSH2: begin
+				if (!cif.dwait & count == 15) begin
+					n_state = HIT_CNT;
+				end else if (!cif.dwait) begin
+					n_state = FLUSH1;
+				end else begin
+					n_state = FLUSH2;
+				end
+			end
+			HIT_CNT: begin
+				if(!cif.dwait) begin
+					n_state = END_FLUSH;
+				end else begin
+					n_state = HIT_CNT;
+				end
+			end
+			END_FLUSH: begin
+				n_state = END_FLUSH;
+			end
+			default: n_state = IDLE;
+		endcase
 	end
 
 	always_comb begin
-		n_state = IDLE;
 		n_cacheReg = cacheReg;
 		dcif.dmemload = 0;
 		dcif.dhit = 0;
@@ -105,7 +198,7 @@ module dcache (
 		cif.dstore = 0;
 		d_other_addr = dcif.dmemaddr;
 		n_acc_map = acc_map;
-		n_hitT = hitT;
+		n_hitCount = hitCount;
 		n_count = count;
 		n_flushReg = 0;
 
@@ -115,61 +208,49 @@ module dcache (
 					if(d_same_tag != 2'b10) begin
 						if (d_same_tag == 2'b00 && validCheck0 == 1) begin 
 							dcif.dhit = 1;
-							n_hitT = hitT + 1;
+							n_hitCount = hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 1;                                             
-							n_state = IDLE;
 						end else if (validCheck1 == 1 && d_same_tag == 2'b01) begin 
 							dcif.dhit = 1;
-							n_hitT=hitT+1;
+							n_hitCount=hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 0;
-							n_state = IDLE;
 						end else begin
 							if ((!validCheck0) || (!validCheck1)) begin
-								n_state = ALLOCATE1;
 								if (!validCheck0) begin
 									n_acc_map[d_index] = 0;
 								end else begin
 									n_acc_map[d_index] = 1;
 								end
 							end else if((!dirtyCheck0) || (!dirtyCheck1)) begin
-								n_state = ALLOCATE1;
 								if(!dirtyCheck0) begin
 									n_acc_map[d_index] = 0; 
 								end else begin
 									n_acc_map[d_index] = 1;
 								end
-							end else begin
-								n_state = WBACK1;
 							end
 						end
 					end else begin
-						if(dcif.halt) begin
-							n_state = FLUSH1;
-						end else if((!validCheck0) || (!validCheck1)) begin
-							n_state = ALLOCATE1;
+						if((!validCheck0) || (!validCheck1)) begin
 							if (!validCheck0) begin
 								n_acc_map[d_index] = 0;
 							end else begin
 								n_acc_map[d_index] = 1;
 							end
 						end else if((!dirtyCheck0) || (!dirtyCheck1)) begin
-							n_state = ALLOCATE1;
 							if(!dirtyCheck0) begin
 								n_acc_map[d_index] = 0;
 							end else begin
 								n_acc_map[d_index] = 1;
 							end
-						end else begin
-							n_state = WBACK1;
 						end
 					end
 				end else if (dcif.dmemWEN) begin
 					if (d_same_tag == 2'b00) begin
 						dcif.dhit = 1;
 						if(validCheck0==1) begin
-							n_hitT=hitT+1;
+							n_hitCount=hitCount + 1; //add to hit counter
 						end
 						if(acc_map[d_index] == d_same_tag) begin
 							n_acc_map[d_index]=acc_map[d_index]+1;
@@ -185,7 +266,7 @@ module dcache (
 						dcif.dhit = 1;
 
 						if(validCheck1==1) begin
-							n_hitT=hitT+1;
+							n_hitCount=hitCount + 1; //add to hit counter
 						end
 
 						if(acc_map[d_index] == d_same_tag) begin
@@ -201,37 +282,20 @@ module dcache (
 							n_cacheReg[1][d_index][31:0] = dcif.dmemstore;
 						end
 					end else begin
-						if(dcif.halt) begin
-							n_state = FLUSH1;
-						end else begin
-							if(!validCheck0) begin
-								n_acc_map[d_index] = 0;
-								n_state = ALLOCATE1;
-							end else if(!validCheck1) begin
-								n_acc_map[d_index] = 1;
-								n_state = ALLOCATE1;
-							end else if(!dirtyCheck0) begin
-								n_acc_map[d_index] = 0;
-								n_state = ALLOCATE1;
-							end else if (!dirtyCheck1) begin
-								n_acc_map[d_index] = 1;
-								n_state = ALLOCATE1;
-							end else begin
-								n_state = WBACK1;  
-							end
-						end
-					end
-				end else begin
-					if(dcif.halt) begin
-						n_state = FLUSH1;
-					end else begin
-						n_state = IDLE;  
+						if(!validCheck0) begin
+							n_acc_map[d_index] = 0;
+						end else if(!validCheck1) begin
+							n_acc_map[d_index] = 1;
+						end else if(!dirtyCheck0) begin
+							n_acc_map[d_index] = 0;
+						end else if (!dirtyCheck1) begin
+							n_acc_map[d_index] = 1;
+						end	
 					end
 				end
 			end
 
 			ALLOCATE1 : begin
-
 				cif.dREN = 1;
 				cif.daddr = dcif.dmemaddr;
 
@@ -244,15 +308,10 @@ module dcache (
 					end else begin
 						n_cacheReg[acc_map[d_index]][d_index][31:0] = cif.dload;
 					end
-					
-					n_state = ALLOCATE2;
-				end else begin
-					n_state = ALLOCATE1;  
 				end
 			end
 
 			ALLOCATE2 : begin
-
 				cif.dREN = 1;
 				if(!dcif.dmemaddr[2]) begin
 					d_other_addr = dcif.dmemaddr + 4;
@@ -271,7 +330,6 @@ module dcache (
 				if(!cif.dwait) begin
 					n_acc_map[d_index] = acc_map[d_index]+1;
 					dcif.dhit = 1;
-					n_state = IDLE;
 
 					if(d_other_addr[2]) begin
 						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32] = cif.dload;
@@ -287,14 +345,11 @@ module dcache (
 						end else begin
 							n_cacheReg[acc_map[d_index]][d_index][31:0]  = dcif.dmemstore;  
 						end
-					end
-				end else begin
-					n_state = ALLOCATE2;  
+					end 
 				end
 			end
 
-			WBACK1 : begin
-
+			WBACK1 : begin				
 				cif.dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0;
 				cif.daddr = {cacheReg[acc_map[d_index]][d_index][89:64], dcif.dmemaddr[5:2], 2'b00};
@@ -302,12 +357,6 @@ module dcache (
 					cif.dstore = cacheReg[acc_map[d_index]][d_index][63:32];
 				end else begin
 					cif.dstore = cacheReg[acc_map[d_index]][d_index][31:0];  
-				end
-
-				if(!cif.dwait) begin
-					n_state = WBACK2;
-				end else begin
-					n_state = WBACK1;  
 				end
 			end
 
@@ -326,12 +375,6 @@ module dcache (
 				end else begin
 					cif.dstore = cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0];
 				end
-
-				if(!cif.dwait) begin
-					n_state = ALLOCATE1;
-				end else begin
-					n_state = WBACK2;
-				end
 			end
 
 			FLUSH1 : begin
@@ -339,16 +382,8 @@ module dcache (
 					cif.dWEN = 1;
 					cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b100};
 					cif.dstore = cacheReg[count[0]][count[3:1]][63:32];
-					if(!cif.dwait) begin
-						n_state = FLUSH2;
-					end else begin
-						n_state = FLUSH1;  
-					end
-				end else if (count == 15) begin
-					n_state = HIT_CNT;
-				end else begin
-					n_count = count + 1;
-					n_state = FLUSH1;  
+				end else if (count != 15) begin
+					n_count = count + 1; 
 				end
 			end
 
@@ -357,26 +392,15 @@ module dcache (
 				cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b000};
 				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
 				if(!cif.dwait) begin
-					if (count == 15) begin
-						n_state = HIT_CNT;
-					end else begin
+					if (count != 15) begin
 						n_count = count + 1;
-						n_state = FLUSH1;  
-					end
-				end else begin
-					n_state = FLUSH2;  
+					end 
 				end
 			end
 
 			HIT_CNT : begin
-				if(!cif.dwait) begin
-					n_state = END_FLUSH;
-				end else begin
-					n_state = HIT_CNT;
-				end
 				cif.daddr = 32'h3100; //set to write hit count to 3100
-				cif.dstore = hitT+16; //store the hit count
-				//n_flushReg = 1;
+				cif.dstore = hitCount; //store the hit count
 				cif.dREN = 0;
 				cif.dWEN = 1;
 			end
@@ -386,7 +410,6 @@ module dcache (
 				cif.dWEN = 0;
 				n_flushReg = 1;
 				cif.daddr = word_t'('0);
-				n_state = END_FLUSH;
 			end
 		endcase
 	end

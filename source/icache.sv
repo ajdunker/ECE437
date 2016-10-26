@@ -23,7 +23,6 @@ module icache (input logic CLK, nRST, datapath_cache_if dcif, caches_if cif);
 	logic valid_chk;
 	logic same_tag;
 	word_t data_stored;
-
 	assign tag = dcif.imemaddr[31:6];
 	assign index = dcif.imemaddr[5:2];
 	assign tagToCheck = cacheValues[index][57:32];
