@@ -10,7 +10,7 @@
 
 import cpu_types_pkg::*;
 
-module icache (input logic CLK, nRST,datapath_cache_if dcif, caches_if cif);
+module icache (input logic CLK, nRST, datapath_cache_if dcif, caches_if cif);
 
 	//59 bits wide per row, 16 rows
 
@@ -75,3 +75,9 @@ module icache (input logic CLK, nRST,datapath_cache_if dcif, caches_if cif);
   	end
 
 endmodule
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> master
