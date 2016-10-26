@@ -40,24 +40,24 @@ module dcache
 
 	integer i;
 	always_ff @(posedge CLK, negedge nRST) begin
-	    	if (!nRST) begin
-				for (i=0;i<8;i++) begin
-					cacheReg[1][i][91:90]<=0;
-					cacheReg[0][i][91:90]<=0;
-				end
-				state <= IDLE;
-				acc_map <= '0;
-				hitCount <= '0;
-				count <= '0;
-				flushReg <= '0;
-	    	end else begin
-				cacheReg <= n_cacheReg;
-				state <= n_state;
-				acc_map <= n_acc_map;
-				hitCount <= n_hitCount;
-				count <= n_count;
-				flushReg <= n_flushReg;
-    		end
+		if (!nRST) begin
+			for (i=0;i<8;i++) begin
+				cacheReg[1][i][91:90]<=0;
+				cacheReg[0][i][91:90]<=0;
+			end
+			state <= IDLE;
+			acc_map <= '0;
+			hitCount <= '0;
+			count <= '0;
+			flushReg <= '0;
+		end else begin
+			cacheReg <= n_cacheReg;
+			state <= n_state;
+			acc_map <= n_acc_map;
+			hitCount <= n_hitCount;
+			count <= n_count;
+			flushReg <= n_flushReg;
+		end
 	end
  
 	always_comb begin
