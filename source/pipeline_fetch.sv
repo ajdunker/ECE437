@@ -14,7 +14,7 @@
 import cpu_types_pkg::*;
 
 module pipeline_fetch (
-	input logic CLK, nRST,
+	input logic CLK, nRST, dhit,
 	pipeline_fetch_if pfif,
 	hazard_unit_if huif
 );
@@ -28,7 +28,7 @@ module pipeline_fetch (
 			IF_Instr <= '0;
 	  		IF_npc <= '0;
 		end else begin
-			if (huif.hit_check) begin
+			if (huif.hit_check && !huif.hit_check2) begin
 				if(~huif.stall && ~pfif.flush) begin
 					IF_Instr <= pfif.IF_Instr_IN;
 					IF_npc <= pfif.IF_npc_IN;
@@ -43,4 +43,4 @@ module pipeline_fetch (
 	assign pfif.IF_Instr_OUT = IF_Instr;
 	assign pfif.IF_npc_OUT = IF_npc;
 
-endmodule // pipeline_registers
+endmodule 

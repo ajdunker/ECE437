@@ -54,10 +54,9 @@ module pipeline_decode (
 			ID_MemWrite <= 0;
 			ID_careOF <= 0;
 			ID_halt <= 0;
-
 			ID_ALUsrc <= 0;
 		end else begin
-			if (huif.hit_check) begin
+			if (huif.hit_check && !huif.hit_check2) begin
 				if(huif.stall || pfif.flush) begin
 					ID_Instr <= 0;
 					ID_npc <= 0;
@@ -77,7 +76,6 @@ module pipeline_decode (
 				end else begin
 					ID_Instr <= pfif.IF_Instr_OUT;
 					ID_npc <= pfif.IF_npc_OUT;
-
 					ID_jump <= pdif.ID_jump_IN;
 					ID_RegDest <= pdif.ID_RegDest_IN;
 					ID_RegWen <= pdif.ID_RegWen_IN;
@@ -90,7 +88,6 @@ module pipeline_decode (
 					ID_MemWrite <= pdif.ID_MemWrite_IN;
 					ID_careOF <= pdif.ID_careOF_IN;
 					ID_halt <= pdif.ID_halt_IN;
-
 					ID_ALUsrc <= pdif.ID_ALUsrc_IN;
 				end
 			end
@@ -99,7 +96,6 @@ module pipeline_decode (
 
 	assign pdif.ID_Instr_OUT = ID_Instr;
 	assign pdif.ID_npc_OUT = ID_npc;
-
 	assign pdif.ID_jump_OUT = ID_jump;
 	assign pdif.ID_RegDest_OUT = ID_RegDest;
 	assign pdif.ID_RegWen_OUT = ID_RegWen;

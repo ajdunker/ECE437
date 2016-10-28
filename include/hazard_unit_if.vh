@@ -20,7 +20,7 @@ interface hazard_unit_if;
 	// import types
 	import cpu_types_pkg::*;
 
-	logic stall, hit_check;
+	logic stall, hit_check, hit_check2;
 
 
 endinterface

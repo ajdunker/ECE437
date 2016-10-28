@@ -53,13 +53,12 @@ module datapath (
   register_file RF (CLK, nRST, rfif);
   alu ALU (alif);
 
-  pipeline_fetch PF (CLK, nRST, pfif, huif);
+  pipeline_fetch PF (CLK, nRST, dpif.dhit, pfif, huif);
   pipeline_decode PD (CLK, nRST, pfif, pdif, huif);
   pipeline_execute PE (CLK, nRST, pfif, pdif, peif, huif);
   pipeline_memory PM (CLK, nRST, pfif, pdif, peif, pmif, huif);
-
   forwarding_unit FU (CLK, nRST, fuif, peif, pdif, pmif);
-  hazard_unit HU (CLK, nRST, dpif.ihit, dpif.dhit, huif, pfif, pdif);
+  hazard_unit HU (CLK, nRST, dpif.ihit, dpif.dhit, dpif.dmemREN, dpif.dmemWEN, huif, pfif, pdif);
 
   logic branching;
 
