@@ -88,7 +88,9 @@ module datapath (
 
   always_comb begin
     pcEN = 0;
-    if (branching) begin
+    if ((dpif.ihit && !dpif.dhit) && (dpif.dmemREN || dpif.dmemWEN)) begin
+      pcEN = 0;
+    end else if (branching) begin
       if (dpif.ihit | dpif.dhit) begin
         pcEN = 1;
       end

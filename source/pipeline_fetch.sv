@@ -23,7 +23,7 @@ module pipeline_fetch (
 	logic [31:0] IF_Instr;
 	logic [31:0] IF_npc;
 
-	always_ff @(posedge CLK or negedge nRST) begin
+	always_ff @(posedge CLK or negedge nRST) begin 
 		if(nRST == 0) begin
 			IF_Instr <= '0;
 	  		IF_npc <= '0;

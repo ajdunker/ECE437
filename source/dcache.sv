@@ -36,7 +36,8 @@ module dcache
 	logic [31:0] hitCount, n_hitCount, missCount, n_missCount;
 	logic [4:0]  count, n_count;
 	logic flushReg, n_flushReg;
-	logic test;
+	logic test, flushWait, wayCount, nextWayCount;
+	logic [3:0] setCount, nextSetCount;
 
 	integer i;
 	always_ff @(posedge CLK, negedge nRST) begin
@@ -51,6 +52,8 @@ module dcache
 			count <= '0;
 			flushReg <= '0;
 			missCount <= '0;
+			setCount <= '0;
+			wayCount <= '0;
 		end else begin
 			cacheReg <= n_cacheReg;
 			state <= n_state;
@@ -59,6 +62,8 @@ module dcache
 			count <= n_count;
 			flushReg <= n_flushReg;
 			missCount <= n_missCount;
+			setCount <= nextSetCount;
+			wayCount <= nextWayCount;
 		end
 	end
  
@@ -204,6 +209,8 @@ module dcache
 		n_missCount = missCount;
 		n_count = count;
 		n_flushReg = 0;
+		nextWayCount = wayCount;
+		nextSetCount = setCount;
 
 		casez (state)
 			IDLE : begin
@@ -362,6 +369,7 @@ module dcache
 				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
 				if(!cif.dwait) begin
 					if (count != 16) begin
+						n_cacheReg[count[0]][count[3:1]][91:90] = 2'b00;
 						n_count = count + 1;
 					end 
 				end
