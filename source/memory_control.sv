@@ -31,7 +31,7 @@ module memory_control (
   //assign ccif.ramaddr = ((ccif.dREN == 1) || (ccif.dWEN == 1)) ? ccif.daddr : ccif.iaddr;
 
 
-  typedef enum {IDLE, FETCH, WRITEBACK1, WRITEBACK2, SNOOP, LOAD1, LOAD2, PUSH1, PUSH2, INVALIDATE1, INVALIDATE2} state_type;
+  typedef enum {IDLE, FETCH, WRITEBACK1, WRITEBACK2, SNOOP, LOAD1, LOAD2, PUSH1, PUSH2, INVALIDATE} state_type;
 
   state_type state, n_state;
 
@@ -49,6 +49,8 @@ module memory_control (
 
   always_comb begin
     ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
+
+
     n_cpuid = cpuid;
 
     ccif.ccinv = '0;  ccif.ccwait = '0;
@@ -62,6 +64,8 @@ module memory_control (
     casez(state)
 
       IDLE : begin
+        ccif.ccwait = '0;
+
         if (ccif.iREN) begin
           n_state = FETCH;
           if (ccif.iREN[0]) begin
@@ -113,7 +117,8 @@ module memory_control (
       end
 
       LOAD1 : begin
-        ccif.dwait[~cpuid] = 0;
+        ccif.dwait[~cpuid] = 1;
+
         ccif.dload[~cpuid] = ccif.ramload[cpuid];
         ccif.ramaddr[~cpuid] = ccif.daddr[cpuid];
         ccif.ramREN[cpuid] = 1;
@@ -126,7 +131,8 @@ module memory_control (
       end
 
       LOAD2 : begin
-        ccif.dwait[~cpuid] = 0;
+        ccif.dwait[~cpuid] = 1;
+
         ccif.dload[~cpuid] = ccif.ramload[cpuid];
         ccif.ramaddr[~cpuid] = ccif.ramaddr[cpuid];
         ccif.ramREN[~cpuid] = 1;
@@ -139,7 +145,8 @@ module memory_control (
       end
 
       PUSH1 : begin
-        ccif.dwait[cpuid] = 0;
+        ccif.dwait[~cpuid] = 1;
+
         ccif.ccinv[~cpuid] = 1;
         if (ccif.ccwrite) begin
           n_state = PUSH2;
@@ -149,7 +156,8 @@ module memory_control (
       end
 
       PUSH2 : begin
-        ccif.dwait[cpuid] = 0;
+        ccif.dwait[~cpuid] = 1;
+
         ccif.ccinv[~cpuid] = 1;
 
         if (ccif.ramstate == ACCESS) begin
@@ -160,6 +168,8 @@ module memory_control (
       end
 
       WRITEBACK1 : begin
+        ccif.dwait[~cpuid] = 1;
+
         ccif.dload[cpuid] = ccif.ramload[cpuid];
         ccif.ramstore[cpuid] = ccif.dstore[cpuid];
         ccif.ramaddr[cpuid] = ccif.daddr[cpuid];
@@ -169,8 +179,21 @@ module memory_control (
       end
 
       WRITEBACK2 : begin
+        ccif.dwait[~cpuid] = 1;
+
+        ccif.dload[cpuid] = ccif.ramload[cpuid];
+        ccif.ramstore[cpuid] = ccif.dstore[cpuid];
+        ccif.ramaddr[cpuid] = ccif.daddr[cpuid];
+        ccif.ramWEN[cpuid] = 1;
+        
         n_state = IDLE;
       end
+
+      INVALIDATE : begin
+        ccif.ccinv[~cpuid] = 1;
+        n_state = 
+      end
+
     endcase
   end
 endmodule
