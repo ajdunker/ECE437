@@ -85,7 +85,7 @@ module memory_control (
           end else if (ccif.cctrans && !ccif.ccwrite && ccif.dWEN) begin
             n_state = WRITEBACK1;
           end else if (ccif.cctrans && ccif.ccwrite) begin
-            n_state = INVALIDATE1;
+            n_state = INVALIDATE;
           end else begin
             n_state =  IDLE;
           end
@@ -106,9 +106,9 @@ module memory_control (
       SNOOP : begin
         ccif.ccwait[~cpuid] = 1;
 
-        if (ccif.cctrans[~cpuid] && ccif.ccwrite[~cpuid]) begin
+        if (ccif.cctrans[~cpuid]) begin
           n_state = LOAD1;
-        end else if (!ccif.cctrans[~cpuid] && ccif.ccwrite[~cpuid]) begin
+        end else if (!ccif.cctrans[~cpuid]) begin
           n_state = PUSH1;
         end else begin
           n_state = SNOOP;
