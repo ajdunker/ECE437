@@ -15,7 +15,7 @@ module memory_control (
   import cpu_types_pkg::*;
 
   // number of cpus for cc
-  parameter CPUS = 1;
+  parameter CPUS = 2;
   
   //cache outputs
   //assign ccif.iload = (ccif.iREN) ? (ccif.ramload) : '0;
