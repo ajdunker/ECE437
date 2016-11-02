@@ -18,17 +18,17 @@ module memory_control (
   parameter CPUS = 1;
   
   //cache outputs
-  assign ccif.iload = (ccif.iREN) ? (ccif.ramload) : '0;
-  assign ccif.dload = (ccif.ramload);
+  //assign ccif.iload = (ccif.iREN) ? (ccif.ramload) : '0;
+  //assign ccif.dload = (ccif.ramload);
   // Wait for access
-  assign ccif.iwait = (ccif.ramstate == ACCESS) ? (((ccif.iREN == 1) && (ccif.dWEN != 1) && (ccif.dREN != 1)) ? 0 : 1):1;
-  assign ccif.dwait = (ccif.ramstate == ACCESS) ? ((ccif.dREN)? 0 : ((ccif.dWEN) ? 0 : 1)):1;
+  //assign ccif.iwait = (ccif.ramstate == ACCESS) ? (((ccif.iREN == 1) && (ccif.dWEN != 1) && (ccif.dREN != 1)) ? 0 : 1):1;
+  //assign ccif.dwait = (ccif.ramstate == ACCESS) ? ((ccif.dREN)? 0 : ((ccif.dWEN) ? 0 : 1)):1;
 
   //r am outputs
-  assign ccif.ramWEN = ccif.dWEN;
-  assign ccif.ramREN = (((ccif.dREN == 1) || (ccif.iREN == 1))&&(ccif.dWEN != 1)) ? 1 : 0;
-  assign ccif.ramstore = ccif.dstore;
-  assign ccif.ramaddr = ((ccif.dREN == 1) || (ccif.dWEN == 1)) ? ccif.daddr : ccif.iaddr;
+  //assign ccif.ramWEN = ccif.dWEN;
+  //assign ccif.ramREN = (((ccif.dREN == 1) || (ccif.iREN == 1))&&(ccif.dWEN != 1)) ? 1 : 0;
+  //assign ccif.ramstore = ccif.dstore;
+  //assign ccif.ramaddr = ((ccif.dREN == 1) || (ccif.dWEN == 1)) ? ccif.daddr : ccif.iaddr;
 
 
   typedef enum {IDLE, FETCH, WRITEBACK1, WRITEBACK2, SNOOP, LOAD1, LOAD2, PUSH1, PUSH2, INVALIDATE1, INVALIDATE2} state_type;
