@@ -31,7 +31,7 @@ module memory_control (
   assign ccif.ramaddr = ((ccif.dREN == 1) || (ccif.dWEN == 1)) ? ccif.daddr : ccif.iaddr;
 
 
-  typedef enum {IDLE, FETCH, ARBITRATE, WRITEBACK1, WRITEBACK2, SNOOP, LOAD1, LOAD2, PUSH1, PUSH2} state_type;
+  typedef enum {IDLE, FETCH, WRITEBACK1, WRITEBACK2, SNOOP, LOAD1, LOAD2, PUSH1, PUSH2, INVALIDATE1, INVALIDATE2} state_type;
 
   state_type state, n_state;
 
@@ -47,9 +47,8 @@ module memory_control (
     end
   end
 
-  assign ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
-
   always_comb begin
+    ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
     n_cpuid = cpuid;
 
     ccif.ccinv = '0;  ccif.ccwait = '0;
@@ -65,13 +64,28 @@ module memory_control (
       IDLE : begin
         if (ccif.iREN) begin
           n_state = FETCH;
+          if (ccif.iREN[0]) begin
+            n_cpuid = 0;
+          end else begin
+            n_cpuid = 1;
+          end
         end else if (ccif.dWEN || ccif.dREN) begin
-          n_state = ARBITRATE;
           if (ccif.dWEN[1] || ccif.dREN[1]) begin
             n_cpuid = 1;
           end else begin
             n_cpuid = 0;
           end
+
+          if (ccif.cctrans && !ccif.ccwrite && ccif.dREN) begin
+            n_state = SNOOP;
+          end else if (ccif.cctrans && !ccif.ccwrite && ccif.dWEN) begin
+            n_state = WRITEBACK1;
+          end else if (ccif.cctrans && ccif.ccwrite) begin
+            n_state = INVALIDATE1;
+          end else begin
+            n_state =  IDLE;
+          end
+
         end
       end
 
@@ -79,16 +93,10 @@ module memory_control (
         ccif.iwait[cpuid] = 0;
         ccif.ramaddr[cpuid] = ccif.iaddr[cpuid];
         ccif.ramREN[cpuid] = 1;
-        n_state = IDLE; 
-      end
-
-      ARBITRATE : begin
-        if(ccif.dWEN[cpuid]) begin
-          n_state = WRITEBACK1;
-        end else if (ccif.dREN[cpuid]) begin
-          n_state = SNOOP;
+        if (ccif.ramstate == ACCESS) begin
+          n_state = IDLE; 
         end else begin
-          n_state = ARBITRATE;
+          n_state = FETCH;
         end
       end
 
@@ -105,34 +113,62 @@ module memory_control (
       end
 
       LOAD1 : begin
-        ccif.dwait[cpuid] = 0;
-        n_state = LOAD2;
+        ccif.dwait[~cpuid] = 0;
+        ccif.dload[~cpuid] = ccif.ramload[cpuid];
+        ccif.ramaddr[~cpuid] = ccif.daddr[cpuid];
+        ccif.ramREN[cpuid] = 1;
+
+        if (ccif.ccwrite) begin
+          n_state = LOAD2;
+        end else begin
+          n_state = LOAD1;
+        end
       end
 
       LOAD2 : begin
-        ccif.dwait[cpuid] = 0;
-        n_state = IDLE;
+        ccif.dwait[~cpuid] = 0;
+        ccif.dload[~cpuid] = ccif.ramload[cpuid];
+        ccif.ramaddr[~cpuid] = ccif.ramaddr[cpuid];
+        ccif.ramREN[~cpuid] = 1;
+
+        if (ccif.ramstate == ACCESS) begin
+          n_state = IDLE;
+        end else begin
+          n_state = LOAD2;
+        end
       end
 
       PUSH1 : begin
         ccif.dwait[cpuid] = 0;
         ccif.ccinv[~cpuid] = 1;
-        n_state = PUSH2;
+        if (ccif.ccwrite) begin
+          n_state = PUSH2;
+        end else begin
+          n_state = PUSH1;
+        end
       end
 
       PUSH2 : begin
         ccif.dwait[cpuid] = 0;
         ccif.ccinv[~cpuid] = 1;
-        n_state = IDLE;
+
+        if (ccif.ramstate == ACCESS) begin
+          n_state = IDLE;
+        end else begin
+          n_state = PUSH2;
+        end
       end
 
       WRITEBACK1 : begin
-        ccif.dwait[cpuid] = 0;
+        ccif.dload[cpuid] = ccif.ramload[cpuid];
+        ccif.ramstore[cpuid] = ccif.dstore[cpuid];
+        ccif.ramaddr[cpuid] = ccif.daddr[cpuid];
+        ccif.ramWEN[cpuid] = 1;
+
         n_state = WRITEBACK2;
       end
 
       WRITEBACK2 : begin
-        ccif.dwait[cpuid] = 0;
         n_state = IDLE;
       end
     endcase
