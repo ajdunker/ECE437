@@ -54,7 +54,7 @@ module memory_control (
     n_cpuid = cpuid;
 
     ccif.ccinv = '0;  ccif.ccwait = '0;
-    ccif.dwait = '1;  ccif.iwait = '1;
+    ccif.dwait = '0;  ccif.iwait = '0;
     ccif.dload = '0;  ccif.iload = '0;
     ccif.ramstore = '0;
     ccif.ramaddr = '0;
@@ -89,7 +89,6 @@ module memory_control (
           end else begin
             n_state =  IDLE;
           end
-
         end
       end
 
@@ -121,7 +120,7 @@ module memory_control (
 
         ccif.dload[~cpuid] = ccif.ramload[cpuid];
         ccif.ramaddr[~cpuid] = ccif.daddr[cpuid];
-        ccif.ramREN[cpuid] = 1;
+        ccif.ramREN[~cpuid] = 1;
 
         if (ccif.ccwrite) begin
           n_state = LOAD2;
@@ -146,8 +145,8 @@ module memory_control (
 
       PUSH1 : begin
         ccif.dwait[~cpuid] = 1;
-
         ccif.ccinv[~cpuid] = 1;
+
         if (ccif.ccwrite) begin
           n_state = PUSH2;
         end else begin
@@ -157,7 +156,6 @@ module memory_control (
 
       PUSH2 : begin
         ccif.dwait[~cpuid] = 1;
-
         ccif.ccinv[~cpuid] = 1;
 
         if (ccif.ramstate == ACCESS) begin
@@ -185,13 +183,13 @@ module memory_control (
         ccif.ramstore[cpuid] = ccif.dstore[cpuid];
         ccif.ramaddr[cpuid] = ccif.daddr[cpuid];
         ccif.ramWEN[cpuid] = 1;
-        
+
         n_state = IDLE;
       end
 
       INVALIDATE : begin
         ccif.ccinv[~cpuid] = 1;
-        n_state = 
+        n_state = IDLE;
       end
 
     endcase
