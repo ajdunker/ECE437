@@ -47,9 +47,10 @@ module memory_control (
     end
   end
 
-  assign ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
+  //assign ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
 
   always_comb begin
+    ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
     n_cpuid = cpuid;
 
     ccif.ccinv = '0;  ccif.ccwait = '0;
