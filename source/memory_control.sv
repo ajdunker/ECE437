@@ -80,11 +80,11 @@ module memory_control (
             n_cpuid = 0;
           end
 
-          if (ccif.cctrans && !ccif.ccwrite && ccif.dREN) begin
+          if (ccif.cctrans[n_cpuid] && !ccif.ccwrite[n_cpuid] && ccif.dREN[n_cpuid]) begin
             n_state = SNOOP;
-          end else if (ccif.cctrans && !ccif.ccwrite && ccif.dWEN) begin
+          end else if (ccif.cctrans[n_cpuid] && !ccif.ccwrite[n_cpuid] && ccif.dWEN[n_cpuid] begin
             n_state = WRITEBACK1;
-          end else if (ccif.cctrans && ccif.ccwrite && !ccif.dWEN && !ccif.dREN) begin
+          end else if (ccif.cctrans[n_cpuid] && ccif.ccwrite[n_cpuid] && !ccif.dWEN[n_cpuid] && !ccif.dREN[n_cpuid]) begin
             n_state = INVALIDATE;
           end else begin
             n_state =  IDLE;
