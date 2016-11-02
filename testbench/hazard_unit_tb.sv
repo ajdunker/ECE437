@@ -71,35 +71,9 @@ program test(
     assign pdif.ID_Instr_OUT[20:16] = 5'b11011;  
 
     assign pfif.IF_Instr_OUT[25:21] = 5'b11011;
+
     assign pfif.IF_Instr_OUT[20:16] = 5'b00111;
 
-    /*dpif.ihit = 1;
-    pfif.flush = 0;
-
-    @(posedge CLK);
-
-    //ori $1, $zero, 0xF0
-    pfif.IF_Instr_IN = 32'h340100F0;
-
-    @(posedge CLK); 
-
-    //ori $2, $zero, 0x02
-    pfif.IF_Instr_IN = 32'h34020002;
-
-    @(posedge CLK); 
-
-    //add $3, $1, $2
-    pfif.IF_Instr_IN = 32'h00221820;
-
-    @(posedge CLK);
-
-    //add $4, $3, $1
-    pfif.IF_Instr_IN = 32'h00612020;
-
-    @(posedge CLK);
-
-    //halt
-    pfif.IF_Instr_IN = 32'hFFFFFFFF;*/
 
     @(posedge CLK);
     @(posedge CLK);
