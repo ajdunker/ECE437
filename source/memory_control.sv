@@ -84,7 +84,7 @@ module memory_control (
             n_state = SNOOP;
           end else if (ccif.cctrans && !ccif.ccwrite && ccif.dWEN) begin
             n_state = WRITEBACK1;
-          end else if (ccif.cctrans && ccif.ccwrite) begin
+          end else if (ccif.cctrans && ccif.ccwrite && !ccif.dWEN && !ccif.dREN) begin
             n_state = INVALIDATE;
           end else begin
             n_state =  IDLE;
