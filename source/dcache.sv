@@ -228,7 +228,35 @@ module dcache
 							n_hitCount=hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 0;
-						end						
+						end	else begin
+							if ((!validCheck0) || (!validCheck1)) begin
+								if (!validCheck0) begin
+									n_acc_map[d_index] = 0;
+								end else begin
+									n_acc_map[d_index] = 1;
+								end
+							end else if ((!dirtyCheck0) || (!dirtyCheck1)) begin
+								if (!dirtyCheck0) begin
+									n_acc_map[d_index] = 0;
+								end else begin
+									n_acc_map[d_index] = 1;
+								end
+							end
+						end		
+					end else begin
+						if ((!validCheck0) || (!validCheck1)) begin
+							if (!validCheck0) begin
+								n_acc_map[d_index] = 0;
+							end else begin
+								n_acc_map[d_index] = 1;
+							end
+						end else if ((!dirtyCheck0) || (!dirtyCheck1)) begin
+							if (!dirtyCheck0) begin
+								n_acc_map[d_index] = 0;
+							end else begin
+								n_acc_map[d_index] = 1;
+							end
+						end
 					end
 				end else if (dcif.dmemWEN) begin
 					if (d_same_tag == 2'b00) begin
@@ -266,6 +294,16 @@ module dcache
 							n_cacheReg[1][d_index][63:32] = dcif.dmemstore;
 						end else begin
 							n_cacheReg[1][d_index][31:0] = dcif.dmemstore;
+						end
+					end else begin
+						if (!validCheck0) begin
+							n_acc_map[d_index] = 0;
+						end else if (!validCheck1) begin
+							n_acc_map[d_index] = 1;
+						end else if (!dirtyCheck0) begin
+							n_acc_map[d_index] = 0;
+						end else if (!dirtyCheck1) begin
+							n_acc_map[d_index] = 1;
 						end
 					end
 				end
@@ -392,4 +430,3 @@ module dcache
 	end
 
 endmodule 
-
