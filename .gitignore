@@ -20,3 +20,4 @@ sim.txt
 diff.txt
 source/coherence_control.sv
 testbench/coherence_control_tb.sv
+archive/*
