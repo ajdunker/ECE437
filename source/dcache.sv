@@ -17,8 +17,12 @@ module dcache
 	datapath_cache_if dcif,
 	caches_if cif
 );
+	
 
-	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH} state_type;
+	
+
+
+	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH, SNOOP, SN_WB1, SN_WB2} state_type;
 	state_type state, n_state;
 
 	//92 bits wide, 8 rows, 2 pieces of data per row
@@ -39,6 +43,17 @@ module dcache
 	logic test, flushWait, wayCount, nextWayCount;
 	logic [3:0] setCount, nextSetCount;
 
+	logic [2:0] snoop_index;
+	logic [25:0]snoop_tag;
+
+	logic [25:0] snoop_tag_chk_0;
+	logic [25:0] snoop_tag_chk_1;
+
+	logic snoop_valid_chk_0;
+	logic snoop_valid_chk_1;
+
+	logic [1:0] snoop_same_tag;
+
 	integer i;
 	always_ff @(posedge CLK, negedge nRST) begin
 		if (!nRST) begin
@@ -54,6 +69,7 @@ module dcache
 			missCount <= '0;
 			setCount <= '0;
 			wayCount <= '0;
+			cacheReg <= '0;
 		end else begin
 			cacheReg <= n_cacheReg;
 			state <= n_state;
@@ -99,13 +115,26 @@ module dcache
 		end else begin
 			d_data_stored = d_data_stored_1;
 		end
+
+		assign snoop_tag = cif.ccsnoopaddr[31:6];
+		assign snoop_index = cif.ccsnoopaddr[5:3];
+
+		assign snoop_tag_chk_0 = cacheReg[0][snoop_index][89:64];
+		assign snoop_tag_chk_1 = cacheReg[1][snoop_index][89:64];
+
+		assign snoop_valid_chk_0 = cacheReg[0][snoop_index][91];
+		assign snoop_valid_chk_1 = cacheReg[1][snoop_index][91];
+
+		 assign snoop_same_tag = (snoop_tag == snoop_tag_chk_0) ? 2'b00 : ((snoop_tag == snoop_tag_chk_1) ? 2'b01 : 2'b10);
 	end
 
 	always_comb begin
 		n_state = IDLE;
 		casez (state)
 			IDLE: begin
-				if (dcif.dmemREN) begin
+				if (cif.ccwait) begin
+					n_state = SNOOP;
+				end else if (dcif.dmemREN && !cif.ccwait) begin
 					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) & (validCheck0 | validCheck1)) begin
 						n_state = IDLE;
 					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
@@ -115,8 +144,8 @@ module dcache
 					end else begin
 						n_state = WBACK1;
 					end
-				end else if (dcif.dmemWEN) begin
-					if (d_same_tag != 2'b00 & d_same_tag != 2'b01) begin
+				end else if (dcif.dmemWEN && !cif.ccwait) begin
+					/*if (d_same_tag != 2'b00 & d_same_tag != 2'b01) begin
 						if (dcif.halt) begin
 							n_state = FLUSH1;
 						end else if (!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1) begin
@@ -124,6 +153,15 @@ module dcache
 						end else begin
 							n_state = WBACK1;
 						end
+					end*/
+					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) & (validCheck0 | validCheck1)) begin
+						n_state = IDLE;
+					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
+						n_state = ALLOCATE1;
+					end else if (dcif.halt) begin
+						n_state = FLUSH1;
+					end else begin
+						n_state = WBACK1;
 					end
 				end else begin
 					if(dcif.halt) begin
@@ -134,7 +172,9 @@ module dcache
 				end
 			end
 			ALLOCATE1: begin
-				if (!cif.dwait) begin
+				if (cif.ccwait) begin
+					n_state = SNOOP;
+				end else if (!cif.dwait) begin
 					n_state = ALLOCATE2;
 				end else begin
 					n_state = ALLOCATE1;
@@ -148,7 +188,9 @@ module dcache
 				end
 			end
 			WBACK1: begin
-				if(!cif.dwait) begin
+				if (cif.ccwait) begin
+					n_state = SNOOP;
+				end else if(!cif.dwait) begin
 					n_state = WBACK2;
 				end else begin
 					n_state = WBACK1;  
@@ -167,14 +209,14 @@ module dcache
 				end else if (cacheReg[count[0]][count[3:1]][90]) begin
 					n_state = FLUSH1; 
 				end else if (count == 16) begin
-					n_state = HIT_CNT;
+					n_state = END_FLUSH;
 				end else begin
 					n_state = FLUSH1; 
 				end
 			end
 			FLUSH2: begin
 				if (!cif.dwait & count == 16) begin
-					n_state = HIT_CNT;
+					n_state = END_FLUSH;
 				end else if (!cif.dwait) begin
 					n_state = FLUSH1;
 				end else begin
@@ -188,9 +230,49 @@ module dcache
 					n_state = HIT_CNT;
 				end
 			end
+
 			END_FLUSH: begin
 				n_state = END_FLUSH;
 			end
+
+			SNOOP : begin
+				if (snoop_same_tag != 2'b10) begin //tag found
+					if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S ->  I
+						n_state = IDLE;
+					end else if (cif.ccinv && cacheReg[snoop_same_tag][snoop_index][90]) begin // M -> I
+						n_state = SN_WB1;
+					end else																//Do not change state;
+						n_state = IDLE;
+					/*if (!cif.ccinv && cacheReg[snoop_same_tag][snoop_index][90]) begin // M -> S
+						n_state = SN_WB1;
+					end else if (cif.ccinv && cacheReg[snoop_same_tag][snoop_index][90]) begin // M -> I
+						n_state = SN_WB1;
+					end else if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S -> I
+						n_state = IDLE;
+					end else begin
+						n_state = IDLE;
+					end*/
+				end else begin
+					n_state = IDLE;
+				end
+			end
+
+			SN_WB1 : begin
+				//if(!cif.dwait) begin
+					n_state = SN_WB2;
+				/*end else begin
+					n_state = SN_WB1;
+				end*/
+			end
+
+			SN_WB2 : begin
+				//if (!cif.dwait) begin
+					n_state = IDLE;
+				/*end else begin
+					n_state = SN_WB2;
+				end*/
+			end
+
 			default: n_state = IDLE;
 		endcase
 	end
@@ -212,30 +294,36 @@ module dcache
 		nextWayCount = wayCount;
 		nextSetCount = setCount;
 
+		cif.ccwrite = 0;
+		cif.cctrans = 0;
+
 		casez (state)
 			IDLE : begin
-				if(dcif.dmemREN) begin
+				if(dcif.dmemREN && !cif.ccwait) begin
 					if(d_same_tag != 2'b10) begin
 						if (d_same_tag == 2'b00 && validCheck0 == 1) begin 
+							//cif.cctrans = 1;
 							dcif.dhit = 1;
 							n_acc_map[d_index] = 1;
 							n_hitCount = hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
 							n_acc_map[d_index] = 1;                                             
 						end else if (validCheck1 == 1 && d_same_tag == 2'b01) begin 
+							//cif.cctrans = 1;
 							dcif.dhit = 1;
 							n_acc_map[d_index] = 0;
 							n_hitCount=hitCount + 1; //add to hit counter
 							dcif.dmemload = d_data_stored;
-							n_acc_map[d_index] = 0;
 						end	else begin
 							if ((!validCheck0) || (!validCheck1)) begin
+								//cif.cctrans = 1;
 								if (!validCheck0) begin
 									n_acc_map[d_index] = 0;
 								end else begin
 									n_acc_map[d_index] = 1;
 								end
 							end else if ((!dirtyCheck0) || (!dirtyCheck1)) begin
+								//cif.cctrans = 1;
 								if (!dirtyCheck0) begin
 									n_acc_map[d_index] = 0;
 								end else begin
@@ -245,12 +333,14 @@ module dcache
 						end		
 					end else begin
 						if ((!validCheck0) || (!validCheck1)) begin
+							//cif.cctrans = 1;
 							if (!validCheck0) begin
 								n_acc_map[d_index] = 0;
 							end else begin
 								n_acc_map[d_index] = 1;
 							end
 						end else if ((!dirtyCheck0) || (!dirtyCheck1)) begin
+							//cif.cctrans = 1;
 							if (!dirtyCheck0) begin
 								n_acc_map[d_index] = 0;
 							end else begin
@@ -258,8 +348,9 @@ module dcache
 							end
 						end
 					end
-				end else if (dcif.dmemWEN) begin
-					if (d_same_tag == 2'b00) begin
+				end else if (dcif.dmemWEN && !cif.ccwait) begin
+					if (d_same_tag == 2'b00 && validCheck0) begin
+						//cif.cctrans = 1;
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 1;
 						if(validCheck0==1) begin
@@ -268,14 +359,15 @@ module dcache
 						if(acc_map[d_index] == d_same_tag) begin
 							n_acc_map[d_index]=acc_map[d_index]+1;
 						end
-						n_cacheReg[0][d_index][90] = 1;
-						n_cacheReg[0][d_index][91] = 1;
+						//n_cacheReg[0][d_index][90] = 1;
+						//n_cacheReg[0][d_index][91] = 1;
 						if (dcif.dmemaddr[2] == 1) begin
 							n_cacheReg[0][d_index][63:32] = dcif.dmemstore;
 						end else begin
 							n_cacheReg[0][d_index][31:0] = dcif.dmemstore;  
 						end
-					end else if (d_same_tag == 2'b01) begin
+					end else if (d_same_tag == 2'b01 && validCheck1) begin
+						//cif.cctrans = 1;
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 0;
 
@@ -287,8 +379,8 @@ module dcache
 							n_acc_map[d_index] = acc_map[d_index] + 1;
 						end
 
-						n_cacheReg[1][d_index][90] = 1;
-						n_cacheReg[1][d_index][91] = 1;
+						//n_cacheReg[1][d_index][90] = 1;
+						//n_cacheReg[1][d_index][91] = 1;
 
 						if(dcif.dmemaddr[2] == 1) begin
 							n_cacheReg[1][d_index][63:32] = dcif.dmemstore;
@@ -305,6 +397,7 @@ module dcache
 						end else if (!dirtyCheck1) begin
 							n_acc_map[d_index] = 1;
 						end
+						//cif.cctrans = 1;
 					end
 				end
 			end
@@ -314,8 +407,12 @@ module dcache
 				cif.daddr = dcif.dmemaddr;
 
 				n_cacheReg[acc_map[d_index]][d_index][89:64] = dcif.dmemaddr[31:6];
-				n_cacheReg[acc_map[d_index]][d_index][91] = 1;
-
+				
+				cif.cctrans = 1;
+				
+				if(dcif.dmemWEN)
+					cif.ccwrite = 1;
+				
 				if(!cif.dwait) begin
 					if(dcif.dmemaddr[2]) begin
 						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
@@ -333,6 +430,10 @@ module dcache
 					d_other_addr = dcif.dmemaddr - 4;
 				end
 
+				if(dcif.dmemWEN && !cif.ccwait)
+					cif.ccwrite = 1;
+
+				cif.cctrans = 1;
 				cif.daddr = d_other_addr;
 
 				if(dcif.dmemaddr[2]) begin
@@ -342,6 +443,7 @@ module dcache
 				end
 				
 				if(!cif.dwait) begin
+					n_cacheReg[acc_map[d_index]][d_index][91] = 1;
 					n_acc_map[d_index] = acc_map[d_index]+1;
 					//dcif.dhit = 1;
 					n_missCount = missCount + 1;
@@ -394,6 +496,7 @@ module dcache
 			FLUSH1 : begin
 				if (cacheReg[count[0]][count[3:1]][90]) begin
 					cif.dWEN = 1;
+					cif.cctrans = 1;
 					cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b100};
 					cif.dstore = cacheReg[count[0]][count[3:1]][63:32];
 				end else if (count != 16) begin
@@ -403,6 +506,7 @@ module dcache
 
 			FLUSH2 : begin
 				cif.dWEN = 1;
+				cif.cctrans = 1;
 				cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b000};
 				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
 				if(!cif.dwait) begin
@@ -425,6 +529,53 @@ module dcache
 				cif.dWEN = 0;
 				n_flushReg = 1;
 				cif.daddr = word_t'('0);
+			end
+
+			SNOOP : begin
+				if (snoop_same_tag != 2'b10) begin //tag found
+					if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S ->  I
+						cif.cctrans = 1;
+						cif.ccwrite = 0;
+						n_cacheReg[snoop_same_tag][snoop_index][91] = 0; //invalidate
+					end else if (cif.ccinv && cacheReg[snoop_same_tag][snoop_index][90]) begin // M -> I
+						cif.cctrans = 1;
+						cif.ccwrite = 1;
+						n_cacheReg[snoop_same_tag][snoop_index][90] = 0; //undirty
+						n_cacheReg[snoop_same_tag][snoop_index][91] = 0; //invalidate
+					end /*else if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S -> I
+						n_cacheReg[snoop_same_tag][snoop_index][90] = 0; //undirty
+						n_cacheReg[snoop_same_tag][snoop_index][91] = 0; //invalidate
+					end*/
+				end
+			end
+
+			SN_WB1 : begin
+				cif.dWEN = 1;
+				n_cacheReg[snoop_same_tag][snoop_index][90] = 0;
+				cif.daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], cif.ccsnoopaddr[5:2], 2'b00};
+				cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+				/*if(cif.ccsnoopaddr[2]) begin
+					cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+				end else begin
+					cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];  
+				end*/
+			end
+
+			SN_WB2 : begin
+				cif.dWEN = 1;
+				if(!cif.ccsnoopaddr[2]) begin
+					d_other_addr = cif.ccsnoopaddr + 4;
+				end else begin
+					d_other_addr = cif.ccsnoopaddr - 4;
+				end
+
+				cif.daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], cif.ccsnoopaddr[5:2], 2'b00};
+				cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];
+				/*if(cif.ccsnoopaddr[2]) begin
+					cif.dstore = cacheReg[cif.snoopaddr][63:32];
+				end else begin
+					cif.dstore = cacheReg[cif.daddr[31:6]][cif.daddr[5:3]][31:0];
+				end*/
 			end
 		endcase
 	end

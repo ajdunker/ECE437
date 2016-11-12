@@ -77,7 +77,7 @@ module datapath (
 
   always_ff @(posedge CLK, negedge nRST) begin
     if (nRST == 0) begin
-      pc <= 0;
+      pc <= PC_INIT;
     end
     else begin
       if (pcEN && ~huif.stall) begin

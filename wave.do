@@ -2,28 +2,39 @@ onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /system_tb/CLK
 add wave -noupdate /system_tb/nRST
-add wave -noupdate /system_tb/DUT/CPU/DP/cuif/Instr
-add wave -noupdate /system_tb/DUT/CPU/DP/peif/EX_RegWen_OUT
-add wave -noupdate /system_tb/DUT/CPU/DP/peif/EX_RegDest_OUT
-add wave -noupdate /system_tb/DUT/CPU/DP/FU/rt
-add wave -noupdate /system_tb/DUT/CPU/DP/FU/rs
-add wave -noupdate /system_tb/DUT/CPU/DP/fuif/ForwardA
-add wave -noupdate /system_tb/DUT/CPU/DP/fuif/ForwardB
-add wave -noupdate /system_tb/DUT/CPU/DP/cuif/ALUsrc
-add wave -noupdate /system_tb/DUT/CPU/DP/pdif/ID_ALUsrc_OUT
-add wave -noupdate /system_tb/DUT/CPU/DP/pdif/ID_ALUSrc2_OUT
-add wave -noupdate /system_tb/DUT/CPU/DP/huif/stall
-add wave -noupdate -radix unsigned /system_tb/DUT/CPU/DP/rfif/rsel1
-add wave -noupdate -radix unsigned /system_tb/DUT/CPU/DP/rfif/rsel2
-add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat1
-add wave -noupdate /system_tb/DUT/CPU/DP/rfif/rdat2
-add wave -noupdate /system_tb/DUT/CPU/DP/alif/port_a
-add wave -noupdate /system_tb/DUT/CPU/DP/alif/port_b
-add wave -noupdate /system_tb/DUT/CPU/DP/alif/port_o
-add wave -noupdate -expand /system_tb/DUT/CPU/DP/RF/register
-add wave -noupdate /system_tb/DUT/CPU/DP/pc
+add wave -noupdate /system_tb/DUT/CPU/CC/CPUS
+add wave -noupdate /system_tb/DUT/CPU/CC/state
+add wave -noupdate /system_tb/DUT/CPU/CC/n_state
+add wave -noupdate /system_tb/DUT/CPU/CC/cpuid
+add wave -noupdate /system_tb/DUT/CPU/CC/n_cpuid
+add wave -noupdate -expand /system_tb/DUT/CPU/CC/ccif/iwait
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/dwait
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/iREN
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/dREN
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/dWEN
+add wave -noupdate -expand /system_tb/DUT/CPU/CC/ccif/iload
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/dload
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/dstore
+add wave -noupdate -expand /system_tb/DUT/CPU/CC/ccif/iaddr
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/daddr
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ccwait
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ccinv
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ccwrite
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/cctrans
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ccsnoopaddr
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramWEN
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramREN
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramstate
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramaddr
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramstore
+add wave -noupdate /system_tb/DUT/CPU/CC/ccif/ramload
+add wave -noupdate -expand /system_tb/DUT/CPU/CM0/ICACHE/cacheValues
+add wave -noupdate /system_tb/DUT/CPU/CM1/ICACHE/cacheValues
+add wave -noupdate /system_tb/DUT/CPU/cif0/iload
+add wave -noupdate /system_tb/DUT/CPU/cif0/iREN
+add wave -noupdate /system_tb/DUT/CPU/cif0/iaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {937990 ps} 0}
+WaveRestoreCursors {{Cursor 1} {64380 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -39,4 +50,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {666820 ps} {1237223 ps}
+WaveRestoreZoom {0 ps} {478 ns}
