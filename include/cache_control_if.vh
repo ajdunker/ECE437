@@ -47,6 +47,14 @@ interface cache_control_if(
   logic   [CPUS-1:0]      ccwait, ccinv;
   logic   [CPUS-1:0]      ccwrite, cctrans;
   word_t  [CPUS-1:0]      ccsnoopaddr;
+  logic  [CPUS-1:0]      ccsnoopchecking;
+  word_t  [CPUS-1:0]      ccsnoopvalue;
+  logic  [CPUS-1:0]       ccsnoopvalid;
+  logic                   cccofreetomove;
+
+  logic  [CPUS-1:0]       ccatomicinvalidating;
+  word_t [CPUS-1:0]       ccatomicaddr;
+  logic  [CPUS-1:0]       ccatomicinvalidate;
 
   // ram side
   logic                   ramWEN, ramREN;
