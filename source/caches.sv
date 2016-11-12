@@ -15,7 +15,31 @@ module caches (
   // icache
   icache  ICACHE(CLK, nRST, dcif, cif);
   // dcache
-  dcache  DCACHE(CLK, nRST, dcif, cif);
+  dcache  DCACHE (
+  CLK, 
+  nRST, 
+  cif.ccsnoopaddr,
+  cif.ccwait,
+  cif.ccinv,
+  cif.dwait,
+  cif.dload,
+  cif.ccatomicinvalidate,
+  cif.cccofreetomove,
+
+  cif.cctrans,
+  cif.dREN,
+  cif.dWEN,
+  cif.daddr,
+  cif.dstore,
+  cif.ccwrite,
+  cif.ccsnoopchecking,
+  cif.ccsnoopvalue,
+  cif.ccsnoopvalid, 
+  cif.ccatomicinvalidating,
+  cif.ccatomicaddr,
+  dcif
+  //cif
+  );
 
   // dcache invalidate before halt handled by dcache when exists
   //assign dcif.flushed = dcif.halt;

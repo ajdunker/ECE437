@@ -7,12 +7,14 @@
 
 `include "datapath_cache_if.vh"
 `include "cache_control_if.vh"
+`include "caches_if.vh"
 `include "cpu_types_pkg.vh"
 
 import cpu_types_pkg::*;
 
 module dcache 
 (
+
 	input logic CLK, nRST,
 
   	input word_t ccsnoopaddr,
@@ -35,10 +37,10 @@ module dcache
   	output logic ccatomicinvalidating,
   	output word_t ccatomicaddr,
 
-	datapath_cache_if dcif,
-	caches_if cif
+	datapath_cache_if dcif
+	//caches_if cif
 );
-
+	parameter CPUID = 0;
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, SNOOP_CHK, SNOOP_WRITE1, SNOOP_WRITE2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH} state_type;
 	state_type state, n_state;
 
@@ -234,28 +236,28 @@ module dcache
 				end
 			end
 			ALLOCATE1: begin
-				if (!cif.dwait) begin
+				if (!dwait) begin
 					n_state = ALLOCATE2;
 				end else begin
 					n_state = ALLOCATE1;
 				end
 			end 
 			ALLOCATE2: begin
-				if (!cif.dwait) begin
+				if (!dwait) begin
 					n_state = IDLE;
 				end else begin
 					n_state = ALLOCATE2; 
 				end
 			end
 			WBACK1: begin
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					n_state = WBACK2;
 				end else begin
 					n_state = WBACK1;  
 				end
 			end
 			WBACK2: begin
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					n_state = ALLOCATE1;
 				end else begin
 					n_state = WBACK2;
@@ -277,21 +279,21 @@ module dcache
 				end
 			end
 			SNOOP_WRITE1: begin
-				if(!cif.dwait) begin
+				if(!dwait) begin
         			n_state = SNOOP_WRITE2;
       			end else begin
         			n_state = SNOOP_WRITE1;  
       			end
 			end
 			SNOOP_WRITE2: begin
-				if(!cif.dwait) begin
+				if(!dwait) begin
         			n_state = IDLE;
       			end else begin
         			n_state = SNOOP_WRITE2;  
       			end
 			end
 			FLUSH1: begin
-				if ((cacheReg[count[0]][count[3:1]][90]) & !cif.dwait) begin
+				if ((cacheReg[count[0]][count[3:1]][90]) & !dwait) begin
 					n_state = FLUSH2;
 				end else if (cacheReg[count[0]][count[3:1]][90]) begin
 					n_state = FLUSH1; 
@@ -302,16 +304,16 @@ module dcache
 				end
 			end
 			FLUSH2: begin
-				if (!cif.dwait & count == 16) begin
+				if (!dwait & count == 16) begin
 					n_state = HIT_CNT;
-				end else if (!cif.dwait) begin
+				end else if (!dwait) begin
 					n_state = FLUSH1;
 				end else begin
 					n_state = FLUSH2;
 				end
 			end
 			HIT_CNT: begin
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					n_state = END_FLUSH;
 				end else begin
 					n_state = HIT_CNT;
@@ -328,10 +330,10 @@ module dcache
 		n_cacheReg = cacheReg;
 		dcif.dmemload = 0;
 		dcif.dhit = 0;
-		cif.dREN = 0;
-		cif.dWEN = 0;
-		cif.daddr = dcif.dmemaddr;
-		cif.dstore = 0;
+		dREN = 0;
+		dWEN = 0;
+		daddr = dcif.dmemaddr;
+		dstore = 0;
 		d_other_addr = dcif.dmemaddr;
 		n_acc_map = acc_map;
 		n_hitCount = hitCount;
@@ -512,30 +514,30 @@ module dcache
 			end
 
 			ALLOCATE1 : begin
-				cif.dREN = 1;
-				cif.daddr = dcif.dmemaddr;
+				dREN = 1;
+				daddr = dcif.dmemaddr;
 
 				n_cacheReg[acc_map[d_index]][d_index][89:64] = dcif.dmemaddr[31:6];
 				n_cacheReg[acc_map[d_index]][d_index][91] = 1;
 
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					if(dcif.dmemaddr[2]) begin
-						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
+						n_cacheReg[acc_map[d_index]][d_index][63:32] = dload;
 					end else begin
-						n_cacheReg[acc_map[d_index]][d_index][31:0] = cif.dload;
+						n_cacheReg[acc_map[d_index]][d_index][31:0] = dload;
 					end
 				end
 			end
 
 			ALLOCATE2 : begin
-				cif.dREN = 1;
+				dREN = 1;
 				if(!dcif.dmemaddr[2]) begin
 					d_other_addr = dcif.dmemaddr + 4;
 				end else begin
 					d_other_addr = dcif.dmemaddr - 4;
 				end
 
-				cif.daddr = d_other_addr;
+				daddr = d_other_addr;
 
 				if(dcif.dmemaddr[2]) begin
 					dcif.dmemload = cacheReg[acc_map[d_index]][d_index][63:32];  
@@ -543,14 +545,14 @@ module dcache
 					dcif.dmemload = cacheReg[acc_map[d_index]][d_index][31:0];  
 				end
 				
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					n_acc_map[d_index] = acc_map[d_index]+1;
 					dcif.dhit = 1;
 					n_missCount = missCount + 1;
 					if(d_other_addr[2]) begin
-						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32] = cif.dload;
+						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32] = dload;
 					end else begin
-						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0] = cif.dload;
+						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0] = dload;
 					end
 
 					if(dcif.dmemWEN) begin
@@ -571,30 +573,30 @@ module dcache
 			end
 
 			WBACK1 : begin				
-				cif.dWEN = 1;
+				dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0;
-				cif.daddr = {cacheReg[acc_map[d_index]][d_index][89:64], dcif.dmemaddr[5:2], 2'b00};
+				daddr = {cacheReg[acc_map[d_index]][d_index][89:64], dcif.dmemaddr[5:2], 2'b00};
 				if(dcif.dmemaddr[2]) begin
-					cif.dstore = cacheReg[acc_map[d_index]][d_index][63:32];
+					dstore = cacheReg[acc_map[d_index]][d_index][63:32];
 				end else begin
-					cif.dstore = cacheReg[acc_map[d_index]][d_index][31:0];  
+					dstore = cacheReg[acc_map[d_index]][d_index][31:0];  
 				end
 			end
 
 			WBACK2 : begin
-				cif.dWEN = 1;
+				dWEN = 1;
 				if(!dcif.dmemaddr[2]) begin
 					d_other_addr = dcif.dmemaddr + 4;
 				end else begin
 					d_other_addr = dcif.dmemaddr - 4;
 				end
 
-				cif.daddr = {cacheReg[acc_map[d_index]][d_other_addr[5:3]][89:64], d_other_addr[5:2], 2'b00};
+				daddr = {cacheReg[acc_map[d_index]][d_other_addr[5:3]][89:64], d_other_addr[5:2], 2'b00};
 
 				if(d_other_addr[2]) begin
-					cif.dstore = cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32];
+					dstore = cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32];
 				end else begin
-					cif.dstore = cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0];
+					dstore = cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0];
 				end
 			end
 
@@ -622,38 +624,38 @@ module dcache
 			end
 
 			SNOOP_WRITE1 : begin				
-				cif.dWEN = 1;
+				dWEN = 1;
 				n_cacheReg[acc_map[d_index]][d_index][90] = 0;
-				cif.daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], ccsnoopaddr[5:2], 2'b00};
+				daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], ccsnoopaddr[5:2], 2'b00};
 				if(ccsnoopaddr[2]) begin
-					cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+					dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
 				end else begin
-					cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];  
+					dstore = cacheReg[snoop_same_tag][snoop_index][31:0];  
 				end
 			end
 
 			SNOOP_WRITE2 : begin
-				cif.dWEN = 1;
+				dWEN = 1;
 				if(!ccsnoopaddr[2]) begin
 					d_other_addr = ccsnoopaddr + 4;
 				end else begin
 					d_other_addr = ccsnoopaddr - 4;
 				end
 
-				cif.daddr = {cacheReg[snoop_same_tag][d_other_addr[5:3]][89:64], d_other_addr[5:2], 2'b00};
+				daddr = {cacheReg[snoop_same_tag][d_other_addr[5:3]][89:64], d_other_addr[5:2], 2'b00};
 
 				if(d_other_addr[2]) begin
-					cif.dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][63:32];
+					dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][63:32];
 				end else begin
-					cif.dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][31:0];
+					dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][31:0];
 				end
 			end
 
 			FLUSH1 : begin
 				if (cacheReg[count[0]][count[3:1]][90]) begin
-					cif.dWEN = 1;
-					cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b100};
-					cif.dstore = cacheReg[count[0]][count[3:1]][63:32];
+					dWEN = 1;
+					daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b100};
+					dstore = cacheReg[count[0]][count[3:1]][63:32];
 					if (!dwait) begin
 						n_cacheReg[count[0]][count[3:1]][91] = 0;
           				n_cacheReg[count[0]][count[3:1]][90] = 0;
@@ -664,12 +666,12 @@ module dcache
 			end
 
 			FLUSH2 : begin
-				cif.dWEN = 1;
-				cif.daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b000};
-				cif.dstore = cacheReg[count[0]][count[3:1]][31:0];
+				dWEN = 1;
+				daddr = {cacheReg[count[0]][count[3:1]][89:64], count[3:1], 3'b000};
+				dstore = cacheReg[count[0]][count[3:1]][31:0];
 				n_cacheReg[count[0]][count[3:1]][91] = 0;
       			n_cacheReg[count[0]][count[3:1]][90] = 0;
-				if(!cif.dwait) begin
+				if(!dwait) begin
 					if (count != 16) begin
 						//n_cacheReg[count[0]][count[3:1]][91:90] = 2'b00;
 						n_count = count + 1;
@@ -678,17 +680,17 @@ module dcache
 			end
 
 			HIT_CNT : begin
-				cif.daddr = 32'h3100; //set to write hit count to 3100
-				cif.dstore = hitCount - missCount; //store the hit count
-				cif.dREN = 0;
-				cif.dWEN = 1;
+				daddr = 32'h3100; //set to write hit count to 3100
+				dstore = hitCount - missCount; //store the hit count
+				dREN = 0;
+				dWEN = 1;
 			end
 			
 			END_FLUSH: begin
-				cif.dREN = 0;
-				cif.dWEN = 0;
+				dREN = 0;
+				dWEN = 0;
 				n_flushReg = 1;
-				cif.daddr = word_t'('0);
+				daddr = word_t'('0);
 			end
 		endcase
 	end

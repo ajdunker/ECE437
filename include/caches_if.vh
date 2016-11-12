@@ -32,9 +32,17 @@ interface caches_if;
   // ccwrite        : high if cache is doing a write of addr
   // ccsnoopaddr    : the addr being sent to other cache with either (wb/inv)
   // cctrans        : high if the cache state is transitioning (i.e. I->S, I->M, etc...)
-  logic         ccwait, ccinv;
-  logic         ccwrite, cctrans;
-  word_t        ccsnoopaddr;
+  logic ccwait, ccinv;
+  logic ccwrite, cctrans;
+  word_t ccsnoopaddr;
+  logic ccsnoopchecking;
+  word_t ccsnoopvalue;
+  logic ccsnoopvalid;
+  logic cccofreetomove;
+
+  logic ccatomicinvalidating;
+  word_t ccatomicaddr;
+  logic ccatomicinvalidate;
 
 
   // icache ports to controller

@@ -13,7 +13,7 @@ import cpu_types_pkg::*;
 module icache (input logic CLK, nRST, datapath_cache_if dcif, caches_if cif);
 
    //59 bits wide per row, 16 rows
-
+   parameter CPUID = 0;
    logic [31:0] instruction;
    logic [31:0] n_instruction;
    logic [15:0][58:0] cacheValues, n_cacheValues;
