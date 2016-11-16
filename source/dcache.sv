@@ -53,6 +53,7 @@ module dcache
 	logic snoop_valid_chk_1;
 
 	logic [1:0] snoop_same_tag;
+	logic pick_frame;
 
 	integer i;
 	always_ff @(posedge CLK, negedge nRST) begin
@@ -116,16 +117,17 @@ module dcache
 			d_data_stored = d_data_stored_1;
 		end
 
-		assign snoop_tag = cif.ccsnoopaddr[31:6];
-		assign snoop_index = cif.ccsnoopaddr[5:3];
+		snoop_tag = cif.ccsnoopaddr[31:6];
+		snoop_index = cif.ccsnoopaddr[5:3];
 
-		assign snoop_tag_chk_0 = cacheReg[0][snoop_index][89:64];
-		assign snoop_tag_chk_1 = cacheReg[1][snoop_index][89:64];
+		snoop_tag_chk_0 = cacheReg[0][snoop_index][89:64];
+		snoop_tag_chk_1 = cacheReg[1][snoop_index][89:64];
 
-		assign snoop_valid_chk_0 = cacheReg[0][snoop_index][91];
-		assign snoop_valid_chk_1 = cacheReg[1][snoop_index][91];
+		snoop_valid_chk_0 = cacheReg[0][snoop_index][91];
+		snoop_valid_chk_1 = cacheReg[1][snoop_index][91];
 
-		 assign snoop_same_tag = (snoop_tag == snoop_tag_chk_0) ? 2'b00 : ((snoop_tag == snoop_tag_chk_1) ? 2'b01 : 2'b10);
+		snoop_same_tag = (snoop_tag == snoop_tag_chk_0) ? 2'b00 : ((snoop_tag == snoop_tag_chk_1) ? 2'b01 : 2'b10);
+		pick_frame = (snoop_tag_chk_0 ? 0 : (snoop_tag_chk_1 ? 1: 0));
 	end
 
 	always_comb begin
@@ -236,10 +238,18 @@ module dcache
 			end
 
 			SNOOP : begin
-				if (snoop_same_tag != 2'b10) begin //tag found
+				n_state = SNOOP;
+				if ((snoop_same_tag != 2'b10) && cacheReg[snoop_same_tag][snoop_index][90])
+					n_state = SN_WB1;
+				else if (!cif.ccwait)
+					n_state = IDLE;
+
+				/*if (snoop_same_tag != 2'b10) begin //tag found
 					if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S ->  I
 						n_state = IDLE;
 					end else if (cif.ccinv && cacheReg[snoop_same_tag][snoop_index][90]) begin // M -> I
+						n_state = SN_WB1;
+					end else if () begin
 						n_state = SN_WB1;
 					end else																//Do not change state;
 						n_state = IDLE;
@@ -252,9 +262,9 @@ module dcache
 					end else begin
 						n_state = IDLE;
 					end*/
-				end else begin
+				/*end else begin
 					n_state = IDLE;
-				end
+				end*/
 			end
 
 			SN_WB1 : begin
@@ -527,12 +537,18 @@ module dcache
 			END_FLUSH: begin
 				cif.dREN = 0;
 				cif.dWEN = 0;
+				cif.cctrans= 1;
 				n_flushReg = 1;
 				cif.daddr = word_t'('0);
 			end
 
 			SNOOP : begin
-				if (snoop_same_tag != 2'b10) begin //tag found
+				cif.cctrans = 1;
+				if (cif.ccinv)
+					n_cacheReg[pick_frame][snoop_index][91] = 0;
+				if ((snoop_same_tag != 2'b10) && cacheReg[snoop_same_tag][snoop_index][90])
+					cif.ccwrite = 1;
+				/*if (snoop_same_tag != 2'b10) begin //tag found
 					if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S ->  I
 						cif.cctrans = 1;
 						cif.ccwrite = 0;
@@ -546,7 +562,7 @@ module dcache
 						n_cacheReg[snoop_same_tag][snoop_index][90] = 0; //undirty
 						n_cacheReg[snoop_same_tag][snoop_index][91] = 0; //invalidate
 					end*/
-				end
+				//end
 			end
 
 			SN_WB1 : begin

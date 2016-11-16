@@ -30,13 +30,14 @@ module icache (input logic CLK, nRST, datapath_cache_if dcif, caches_if cif);
    assign data_stored = cacheValues[index][31:0];
    assign same_tag = (tagToCheck == tag);
 
-   integer i;
+   //integer i;
    always_ff @(posedge CLK, negedge nRST) begin
       if (!nRST) begin
          instruction <= '0; 
-         for (i=0;i<16;i++) begin
+         cacheValues <= '0;
+         /*for (i=0;i<16;i++) begin
          cacheValues[i][58] <= 0;
-         end
+         end*/
       end else begin
          instruction <= n_instruction;
          cacheValues <= n_cacheValues;

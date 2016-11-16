@@ -47,15 +47,23 @@ module memory_control (
     end
   end
 
-  always_comb begin
-    ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
+  assign ccif.ccsnoopaddr[0] = ccif.daddr[1];
+  assign ccif.ccsnoopaddr[1] = ccif.daddr[0];
+  assign ccif.ccinv[0] = ccif.ccwrite[1];
+  assign ccif.ccinv[1] = ccif.ccwrite[0];
 
+  always_comb begin
+    //ccif.ccsnoopaddr[~cpuid] = ccif.daddr[cpuid];
+    //ccif.ccinv[~cpuid] = ccif.ccwrite[cpuid];
 
     n_cpuid = cpuid;
 
-    ccif.ccinv = '0;  ccif.ccwait = '0;
-    ccif.dwait = '1;  ccif.iwait = '1;
-    ccif.dload = '0;  ccif.iload = '0;
+    //ccif.ccinv = '0;  
+    ccif.ccwait = '0;
+    ccif.dwait = '1;  
+    ccif.iwait = '1;
+    ccif.dload = '0;  
+    ccif.iload = '0;
     ccif.ramstore = '0;
     ccif.ramaddr = '0;
     ccif.ramWEN = '0;
@@ -93,8 +101,9 @@ module memory_control (
         ccif.ramaddr = ccif.iaddr[cpuid];
         ccif.ramREN = 1;
         if (ccif.ramstate == ACCESS) begin
-          n_state = IDLE; 
-          n_cpuid = ~cpuid;
+          n_state = IDLE;
+          if (ccif.iREN[~cpuid]) 
+            n_cpuid = ~cpuid;
           ccif.iwait[cpuid] = '0;
         end else begin
           n_state = FETCH;
@@ -104,16 +113,16 @@ module memory_control (
       SNOOP : begin
         ccif.ccwait[~cpuid] = 1;
         n_state = SNOOP2;
-        if(ccif.ccwrite[cpuid]) begin
+        /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
-        end
+        end*/
       end
 
       SNOOP2: begin
         ccif.ccwait[~cpuid] = 1;
-        if(ccif.ccwrite[cpuid]) begin
+        /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
-        end
+        end*/
         if (ccif.cctrans[~cpuid] && ccif.ccwrite[~cpuid]) begin
           n_state = PUSH1;
         end else if (ccif.cctrans[~cpuid] && !ccif.ccwrite[~cpuid]) begin
@@ -121,6 +130,13 @@ module memory_control (
         end else begin
           n_state = LOAD1;
         end
+        /*if(ccif.cctrans[!cpuid] && !ccif.ccwrite[!cpuid])
+          n_state = LOAD1;
+        else if(ccif.cctrans[!cpuid] && ccif.ccwrite[!cpuid])
+          n_state = PUSH1;
+        else begin
+          n_state = SNOOP;
+        end*/
       end
 
       LOAD1 : begin
@@ -151,9 +167,9 @@ module memory_control (
       PUSH1 : begin
         ccif.dload[cpuid] = ccif.dstore[~cpuid];
         ccif.dwait[cpuid] = 0;
-        if(ccif.ccwrite[cpuid]) begin
+        /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
-        end
+        end*/
         n_state = PUSH2;
       end
 
@@ -161,9 +177,9 @@ module memory_control (
         ccif.dload[cpuid] = ccif.dstore[~cpuid];
         ccif.dwait[cpuid] = 0;
         n_state = IDLE;
-        if(ccif.ccwrite[cpuid]) begin
+        /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
-        end
+        end*/
       end
 
       WRITEBACK1 : begin
@@ -197,7 +213,7 @@ module memory_control (
       end
 
       INVALIDATE : begin
-        ccif.ccinv[~cpuid] = 1;
+        //ccif.ccinv[~cpuid] = 1;
         n_state = IDLE;
       end
 
