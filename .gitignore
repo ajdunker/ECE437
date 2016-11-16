@@ -18,3 +18,4 @@ asmFiles/testHazard.asm
 testasm.diff
 sim.txt
 diff.txt
+archive/*
