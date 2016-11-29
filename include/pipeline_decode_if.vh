@@ -31,6 +31,7 @@ interface pipeline_decode_if;
 	logic ID_MemWrite_IN;
 	logic ID_careOF_IN;
 	logic ID_halt_IN;
+	logic ID_atomic_IN;
 
 	//decode outputs
 	logic [31:0] ID_Instr_OUT;
@@ -49,6 +50,7 @@ interface pipeline_decode_if;
 	logic ID_MemWrite_OUT;
 	logic ID_careOF_OUT;
 	logic ID_halt_OUT;
+	logic ID_atomic_OUT;
 
 endinterface
 

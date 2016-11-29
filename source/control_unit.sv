@@ -26,6 +26,7 @@ begin
     cuif.MemWrite = 0; 			//00 : no | 01 : full | 10 : half | 11: byte
     cuif.careOF = 0;
     cuif.halt = 0;
+    cuif.atomic = 1;
 
 	casez(cuif.Instr[31:26])
 		/******************************************
@@ -205,6 +206,25 @@ begin
 			cuif.alu_op = ALU_ADD;
 			cuif.ALUsrc = 3'b001;
 			cuif.MemWrite = 1;
+		end
+
+		LL : begin
+			cuif.ALUOP = ALU_ADD;
+			cuif.ALUSrc = 3'b001;
+			cuif.RegWen = 1;
+			cuif.RegDest = 2'b01;
+			cuif.mem2reg = 1;
+			cuif.atomic = 1;
+		end
+
+		SC : begin
+			cuif.ALUOP = ALU_ADD;
+			cuif.ALUSrc = 3'b001;
+			cuif.RegWen = 1;
+			cuif.RegDest = 2'b01;
+			cuif.MemWrite = 1;
+			cuif.atomic = 1;
+			cuif.rt_check = 1;
 		end
 
 		HALT : begin

@@ -73,7 +73,6 @@ module datapath (
                 Program Counter Work
   ************************************************/
   logic pcEN;
-  //assign pcEN = dpif.ihit & (~dpif.dhit);
 
   always_ff @(posedge CLK, negedge nRST) begin
     if (nRST == 0) begin
@@ -121,6 +120,7 @@ module datapath (
   assign pdif.ID_ALUSrc2_IN = (cuif.ALUsrc == 3'b000) ? rfif.rdat2 : ((cuif.ALUsrc == 3'b001) ? signedExtImm : ((cuif.ALUsrc == 3'b010) ? zeroExtImm : (cuif.ALUsrc == 3'b011) ? luiImm : shamt));
   assign pdif.ID_rdat2_IN = rfif.rdat2;
   assign pdif.ID_careOF_IN = cuif.careOF;
+  assign pdif.ID_atomic_IN = cuif.atomic;
 
   /************************************************
                   Instruction Decode
@@ -129,10 +129,8 @@ module datapath (
   assign pc_jump = {pc4[31:28], pdif.ID_Instr_OUT[25:0], 2'b00};
 
   // next pc for reg jump
-  //assign next_pc_reg = rfif.rdat1;
-  //assign next_pc_reg = pdif.ID_ALUSrc1_OUT;
+
   // next pc for branch
-  //assign next_pc_br = (signedExtImm << 2) + pc4;
   logic [31:0] branch_off;
   assign branch_off = (pdif.ID_Instr_OUT[15] == 0) ? {16'h0000, pdif.ID_Instr_OUT[15:0]} : {16'hffff, pdif.ID_Instr_OUT[15:0]};
   assign next_pc_br = (branch_off << 2) + pdif.ID_npc_OUT;
@@ -202,6 +200,8 @@ module datapath (
   assign peif.EX_RegDest_IN = (pdif.ID_RegDest_OUT == 2'b00) ? pdif.ID_Instr_OUT[15:11] : ((pdif.ID_RegDest_OUT == 2'b01) ?  pdif.ID_Instr_OUT[20:16] : 5'b11111);
 
   //assign peif.EX_wdat_IN = pdif.ID_rdat2_OUT;
+
+  //******************AFFECTED BY ATOMIC 
   always_comb begin
     peif.EX_wdat_IN = pdif.ID_rdat2_OUT;
     casez(fuif.ForwardB)
@@ -212,13 +212,19 @@ module datapath (
       1 : begin
         if (pmif.MEM_mem2reg_OUT) begin
           peif.EX_wdat_IN = pmif.MEM_rdat_OUT;
+        end else if (dpif.state_atomic == 2'b10) begin
+          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
         end else begin
           peif.EX_wdat_IN = pmif.MEM_result_OUT;
         end
       end
 
       2 : begin
-        peif.EX_wdat_IN = peif.EX_result_OUT;
+        if (dpif.state_atomic == 2'b10) begin
+          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
+        end else begin
+          peif.EX_wdat_IN = peif.EX_result_OUT;
+        end
       end
     endcase
   end
@@ -228,6 +234,7 @@ module datapath (
                   Mem
   ************************************************/
   assign pmif.MEM_rdat_IN = dpif.dmemload;
+  assign pmif.MEM_state_atomic_IN = dpif.state_atomic;
 
   /************************************************
                   Control Wiring
@@ -239,28 +246,21 @@ module datapath (
                   Register Wiring
   * ***********************************************/
   // Write enable is dependent on the status of hit signals
-  //assign rfif.WEN = cuif.mem2reg ? ((dpif.dhit) ? cuif.RegWen : 0) : cuif.RegWen & (dpif.dhit | dpif.ihit);
   assign rfif.WEN = pmif.MEM_mem2reg_OUT ? ( 1 ? pmif.MEM_RegWen_OUT : 0) : pmif.MEM_RegWen_OUT;
   // Write select determined the register destination
-  //assign rfif.wsel = (cuif.RegDest == 2'b00) ? dpif.imemload[15:11] : ((cuif.RegDest == 2'b01) ? dpif.imemload[20:16] : 5'b11111);
-  //assign rfif.rsel1 = dpif.imemload[25:21];
-  //assign rfif.rsel2 = dpif.imemload[20:16];
   assign rfif.wsel = pmif.MEM_RegDest_OUT;
   assign rfif.rsel1 = pfif.IF_Instr_OUT[25:21];
   assign rfif.rsel2 = pfif.IF_Instr_OUT[20:16];
+
   // Check if we're putting program counter into Register
-  //assign rfif.wdat = cuif.pc2reg ? pc4 : ((cuif.mem2reg == 1) ? dpif.dmemload : alif.port_o);
-   assign rfif.wdat = (pmif.MEM_mem2reg_OUT == 1) ? pmif.MEM_rdat_OUT : pmif.MEM_result_OUT;
+  //******************AFFECTED BY ATOMIC 
+  //assign rfif.wdat = (pmif.MEM_mem2reg_OUT == 1) ? pmif.MEM_rdat_OUT : pmif.MEM_result_OUT;
+  assign rfif.wdat = (pmif.MEM_state_atomic_OUT == 2'b10) ? ((pmif.MEM_mem2reg_OUT == 1) ? pmif.MEM_rdat_OUT : pmif.MEM_result_OUT) : pmif.MEM_state_atomic_OUT;
 
   /************************************************
                   ALU Wiring
   * ***********************************************/
-  //assign alif.alu_op = cuif.alu_op;
   assign alif.alu_op = pdif.ID_alu_op_OUT;
-  //assign alif.port_a = rfif.rdat1;
-  //assign alif.port_a = pdif.ID_ALUSrc1_OUT;
-  //assign alif.port_b = (cuif.ALUsrc == 3'b000) ? rfif.rdat2 : ((cuif.ALUsrc == 3'b001) ? signedExtImm : ((cuif.ALUsrc == 3'b010) ? zeroExtImm : (cuif.ALUsrc == 3'b011) ? luiImm : shamt));
-  //assign alif.port_b = pdif.ID_ALUSrc2_OUT;
 
   always_comb begin
     alif.port_a = pdif.ID_ALUSrc1_OUT;
@@ -271,9 +271,12 @@ module datapath (
         alif.port_a = pdif.ID_ALUSrc1_OUT;
       end
 
+      //******************AFFECTED BY ATOMIC 
       1 : begin
         if (pmif.MEM_mem2reg_OUT) begin
           alif.port_a = pmif.MEM_rdat_OUT;
+        end else if (dpif.state_atomic == 2'b10) begin
+          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
         end else begin
           alif.port_a = pmif.MEM_result_OUT;
         end
@@ -336,14 +339,12 @@ module datapath (
   assign dpif.halt = halt_ff1;
   assign dpif.imemREN = 1;
   assign dpif.imemaddr = pc;
-  //assign dpif.dmemREN = mrif.dmemREN;
-  //assign dpif.dmemWEN = mrif.dmemWEN;
-  //assign dpif.dmemstore = rfif.rdat2;
-  //assign dpif.dmemaddr = alif.port_o;
+
   assign dpif.dmemREN = peif.EX_mem2reg_OUT;
   assign dpif.dmemWEN = peif.EX_MemWrite_OUT;
   assign dpif.dmemstore = peif.EX_wdat_OUT;
   assign dpif.dmemaddr = peif.EX_result_OUT;
+  assign dpif.datomic = pmif.EX_atomic_OUT;
 
 
 endmodule

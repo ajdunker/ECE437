@@ -17,10 +17,6 @@ module dcache
 	datapath_cache_if dcif,
 	caches_if cif
 );
-	
-
-	
-
 
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH, SNOOP, SN_WB1, SN_WB2} state_type;
 	state_type state, n_state;
