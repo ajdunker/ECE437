@@ -34,6 +34,7 @@ logic EX_mem2reg;
 logic EX_pc2reg;
 logic EX_MemWrite;
 logic EX_halt;
+logic EX_atomic;
 
 
 	always_ff @(posedge CLK or negedge nRST) begin
@@ -47,6 +48,7 @@ logic EX_halt;
 			EX_pc2reg <= 0;
 			EX_MemWrite <= 0;
 			EX_halt <= 0;
+			EX_atomic <= 0;
 		end else begin
 			if (huif.hit_check) begin
 				EX_npc <= pdif.ID_npc_OUT;
@@ -58,6 +60,7 @@ logic EX_halt;
 				EX_pc2reg <= pdif.ID_pc2reg_OUT;
 				EX_MemWrite <= pdif.ID_MemWrite_OUT;
 				EX_halt <= pdif.ID_halt_OUT;
+				EX_atomic <= pdif.ID_atomic_IN;
 			end
 		end
 	end
@@ -71,5 +74,6 @@ logic EX_halt;
 	assign peif.EX_pc2reg_OUT = EX_pc2reg;
 	assign peif.EX_MemWrite_OUT = EX_MemWrite;
 	assign peif.EX_halt_OUT = EX_halt;
+	assign peif.EX_atomic_OUT = EX_atomic;
 
 endmodule // pipeline_execute

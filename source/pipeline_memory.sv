@@ -34,6 +34,8 @@ module pipeline_memory (
 	logic MEM_pc2reg;
 	logic MEM_mem2reg;
 	logic MEM_halt;
+	logic MEM_atomic;
+	logic [1:0] MEM_state_atomic;
 
 	always_ff @(posedge CLK or negedge nRST) begin
 		if(nRST == 0) begin
@@ -45,6 +47,8 @@ module pipeline_memory (
 			MEM_pc2reg <= 0;
 			MEM_mem2reg <= 0;
 			MEM_halt <= 0;
+			MEM_atomic <= 0;
+			//MEM_state_atomic <= 0;
 		end else begin
 			if (huif.hit_check) begin
 				MEM_npc <= peif.EX_npc_OUT;
@@ -55,6 +59,8 @@ module pipeline_memory (
 				MEM_mem2reg <= peif.EX_mem2reg_OUT;
 				MEM_pc2reg <= peif.EX_pc2reg_OUT;
 				MEM_halt <= peif.EX_halt_OUT;
+				MEM_atomic <= peif.MEM_atomic_OUT;
+				MEM_state_atomic <= pmif.MEM_state_atomic_IN;
 			end
 		end
 	end
@@ -67,5 +73,7 @@ module pipeline_memory (
 	assign pmif.MEM_pc2reg_OUT = MEM_pc2reg;
 	assign pmif.MEM_mem2reg_OUT = MEM_mem2reg;
 	assign pmif.MEM_halt_OUT = MEM_halt;
+	assign pmif.MEM_atomic_OUT = MEM_atomic;
+	assign pmif.MEM_state_atomic_OUT = MEM_state_atomic;
 
 endmodule // pipeline_memory

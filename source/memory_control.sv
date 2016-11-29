@@ -166,17 +166,35 @@ module memory_control (
 
       PUSH1 : begin
         ccif.dload[cpuid] = ccif.dstore[~cpuid];
+        ccif.ramstore = ccif.dstore[~cpuid];
+        ccif.ramaddr = ccif.daddr[~cpuid];
+        ccif.ramWEN = 1;  
         ccif.dwait[cpuid] = 0;
         /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
         end*/
-        n_state = PUSH2;
+        if (ccif.ramstate == ACCESS) begin
+          
+          ccif.dwait[~cpuid] = 0;
+          n_state = PUSH2;
+        end else begin
+          n_state = PUSH1;
+        end
       end
 
       PUSH2 : begin
         ccif.dload[cpuid] = ccif.dstore[~cpuid];
+        ccif.ramstore = ccif.dstore[~cpuid];
+        ccif.ramaddr = ccif.daddr[~cpuid];
+        ccif.ramWEN = 1;
         ccif.dwait[cpuid] = 0;
-        n_state = IDLE;
+        if (ccif.ramstate == ACCESS) begin
+          //ccif.dwait[cpuid] = 0;
+          ccif.dwait[~cpuid] = 0;
+          n_state = IDLE;
+        end else begin
+          n_state = PUSH2;
+        end
         /*if(ccif.ccwrite[cpuid]) begin
           ccif.ccinv[~cpuid] = 1;
         end*/

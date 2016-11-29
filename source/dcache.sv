@@ -17,10 +17,6 @@ module dcache
 	datapath_cache_if dcif,
 	caches_if cif
 );
-	
-
-	
-
 
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH, SNOOP, SN_WB1, SN_WB2} state_type;
 	state_type state, n_state;
@@ -268,19 +264,19 @@ module dcache
 			end
 
 			SN_WB1 : begin
-				//if(!cif.dwait) begin
+				if(!cif.dwait) begin
 					n_state = SN_WB2;
-				/*end else begin
+				end else begin
 					n_state = SN_WB1;
-				end*/
+				end
 			end
 
 			SN_WB2 : begin
-				//if (!cif.dwait) begin
+				if (!cif.dwait) begin
 					n_state = IDLE;
-				/*end else begin
+				end else begin
 					n_state = SN_WB2;
-				end*/
+				end
 			end
 
 			default: n_state = IDLE;
@@ -369,7 +365,7 @@ module dcache
 						if(acc_map[d_index] == d_same_tag) begin
 							n_acc_map[d_index]=acc_map[d_index]+1;
 						end
-						//n_cacheReg[0][d_index][90] = 1;
+						n_cacheReg[0][d_index][90] = 1;
 						//n_cacheReg[0][d_index][91] = 1;
 						if (dcif.dmemaddr[2] == 1) begin
 							n_cacheReg[0][d_index][63:32] = dcif.dmemstore;
@@ -389,7 +385,7 @@ module dcache
 							n_acc_map[d_index] = acc_map[d_index] + 1;
 						end
 
-						//n_cacheReg[1][d_index][90] = 1;
+						n_cacheReg[1][d_index][90] = 1;
 						//n_cacheReg[1][d_index][91] = 1;
 
 						if(dcif.dmemaddr[2] == 1) begin
@@ -414,7 +410,7 @@ module dcache
 
 			ALLOCATE1 : begin
 				cif.dREN = 1;
-				cif.daddr = dcif.dmemaddr;
+				cif.daddr = {dcif.dmemaddr[31:3],1'b0, dcif.dmemaddr[1:0]};//dcif.dmemaddr;
 
 				n_cacheReg[acc_map[d_index]][d_index][89:64] = dcif.dmemaddr[31:6];
 				
@@ -424,18 +420,14 @@ module dcache
 					cif.ccwrite = 1;
 				
 				if(!cif.dwait) begin
-					if(dcif.dmemaddr[2]) begin
-						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
-					end else begin
-						n_cacheReg[acc_map[d_index]][d_index][31:0] = cif.dload;
-					end
+					n_cacheReg[acc_map[d_index]][d_index][31:0] = cif.dload;
 				end
 			end
 
 			ALLOCATE2 : begin
 				cif.dREN = 1;
-				if(!dcif.dmemaddr[2]) begin
-					d_other_addr = dcif.dmemaddr + 4;
+				if(!dcif.dmemaddr[2]) begin		//0
+					d_other_addr = dcif.dmemaddr + 4;		//4
 				end else begin
 					d_other_addr = dcif.dmemaddr - 4;
 				end
@@ -444,34 +436,34 @@ module dcache
 					cif.ccwrite = 1;
 
 				cif.cctrans = 1;
-				cif.daddr = d_other_addr;
+				cif.daddr = {dcif.dmemaddr[31:3],1'b1, dcif.dmemaddr[1:0]};
 
-				if(dcif.dmemaddr[2]) begin
+				/*if(dcif.dmemaddr[2]) begin
 					dcif.dmemload = cacheReg[acc_map[d_index]][d_index][63:32];  
 				end else begin
 					dcif.dmemload = cacheReg[acc_map[d_index]][d_index][31:0];  
-				end
+				end*/
 				
 				if(!cif.dwait) begin
 					n_cacheReg[acc_map[d_index]][d_index][91] = 1;
-					n_acc_map[d_index] = acc_map[d_index]+1;
+					n_acc_map[d_index] = ~acc_map[d_index];
 					//dcif.dhit = 1;
 					n_missCount = missCount + 1;
-					if(d_other_addr[2]) begin
-						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][63:32] = cif.dload;
-					end else begin
-						n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0] = cif.dload;
-					end
+					//if(d_other_addr[2]) begin
+						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
+					//end else begin
+						//n_cacheReg[acc_map[d_index]][d_other_addr[5:3]][31:0] = cif.dload;
+					//end
 
-					if(dcif.dmemWEN) begin
-						n_cacheReg[acc_map[d_index]][d_index][90] = 1;
-						
-						if (dcif.dmemaddr[2]) begin
-							n_cacheReg[acc_map[d_index]][d_index][63:32] = dcif.dmemstore;
-						end else begin
-							n_cacheReg[acc_map[d_index]][d_index][31:0]  = dcif.dmemstore;  
-						end
-					end 
+					//if(dcif.dmemWEN) begin
+					//	n_cacheReg[acc_map[d_index]][d_index][90] = 1;
+					//	
+					//	if (dcif.dmemaddr[2]) begin
+					//		n_cacheReg[acc_map[d_index]][d_index][63:32] = dcif.dmemstore;
+					//	end else begin
+					//		n_cacheReg[acc_map[d_index]][d_index][31:0]  = dcif.dmemstore;  
+					//	end
+					//end 
 				end
 			end
 
@@ -569,7 +561,8 @@ module dcache
 				cif.dWEN = 1;
 				n_cacheReg[snoop_same_tag][snoop_index][90] = 0;
 				cif.daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], cif.ccsnoopaddr[5:2], 2'b00};
-				cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+				//cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+				cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];
 				/*if(cif.ccsnoopaddr[2]) begin
 					cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
 				end else begin
@@ -586,11 +579,12 @@ module dcache
 				end
 
 				cif.daddr = {cacheReg[snoop_same_tag][snoop_index][89:64], cif.ccsnoopaddr[5:2], 2'b00};
-				cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];
-				/*if(cif.ccsnoopaddr[2]) begin
-					cif.dstore = cacheReg[cif.snoopaddr][63:32];
+				//cif.dstore = cacheReg[snoop_same_tag][snoop_index][31:0];
+				cif.dstore = cacheReg[snoop_same_tag][snoop_index][63:32];
+				/*if(d_other_addr[2]) begin
+					cif.dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][63:32];
 				end else begin
-					cif.dstore = cacheReg[cif.daddr[31:6]][cif.daddr[5:3]][31:0];
+					cif.dstore = cacheReg[snoop_same_tag][d_other_addr[5:3]][31:0];
 				end*/
 			end
 		endcase

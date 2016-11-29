@@ -19,6 +19,7 @@ interface control_unit_if;
   logic [2:0] ALUsrc; //choose between a register source and an Imediation source and shamt
   aluop_t alu_op;
   logic mem2reg, pc2reg, MemWrite, careOF, halt;
+  logic atomic, rt_check;
 
 endinterface
 

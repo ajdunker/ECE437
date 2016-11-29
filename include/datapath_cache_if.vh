@@ -30,6 +30,8 @@ interface datapath_cache_if;
   // data and address
   word_t              dmemload, dmemstore, dmemaddr;
 
+  logic [1:0] state_atomic;
+
   // datapath ports
   modport dp (
     input   ihit, imemload, dhit, dmemload,
