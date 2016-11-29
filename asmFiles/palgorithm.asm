@@ -6,7 +6,7 @@
 #									P0										  #
 #*****************************************************************************#
 
-	org 	0x000
+	org 	0x000 				# first processor
 	ori		$s0, $0, 0			# values to generate
 	ori 	$s1, $0, 0			# the bufferhead
 	ori		$s2, $0, 0			# buffer size
@@ -42,22 +42,22 @@ producer:
 
 head_reset:
 	beq		$s1, $s6, head_reset2
-	jr 		$ra
+	jr 		$ra 				# return to caller
 
 head_reset2:
 	ori		$s1, $0, 0
-	jr		$ra
+	jr		$ra 				# return to caller
 
 finish_p0:
 	ori		$t5, $0, 256
 	sw		$t5, fin($0)
-	halt
+	halt 						#complete
 
 #*****************************************************************************#
 #									P1										  #
 #*****************************************************************************#
 
-	org		0x200
+	org		0x200 				#second processor
 	ori 	$s2, $0, 40
 	ori		$s3, $0, 1
 	ori		$s4, $0, 0			# buffer tail
@@ -109,11 +109,11 @@ p1_check:
 
 tail_reset:
 	beq 	$s4, $s2, tail_reset2
-	jr 		$ra
+	jr 		$ra 				# return to caller
 
 tail_reset2:
 	ori 	$s4, $0, 0
-	jr 		$ra
+	jr 		$ra 				# return to caller
 
 # pass in an address to lock function in argument register 0
 # returns when lock is available
