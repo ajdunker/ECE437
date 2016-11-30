@@ -36,7 +36,7 @@ interface datapath_cache_if;
   modport dp (
     input   ihit, imemload, dhit, dmemload,
     output  halt, imemREN, imemaddr, dmemREN, dmemWEN, datomic,
-            dmemstore, dmemaddr
+            dmemstore, dmemaddr, state_atomic
   );
 
   // cache block ports

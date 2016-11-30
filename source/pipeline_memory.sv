@@ -59,7 +59,7 @@ module pipeline_memory (
 				MEM_mem2reg <= peif.EX_mem2reg_OUT;
 				MEM_pc2reg <= peif.EX_pc2reg_OUT;
 				MEM_halt <= peif.EX_halt_OUT;
-				MEM_atomic <= peif.MEM_atomic_OUT;
+				MEM_atomic <= pmif.MEM_atomic_OUT;
 				MEM_state_atomic <= pmif.MEM_state_atomic_IN;
 			end
 		end

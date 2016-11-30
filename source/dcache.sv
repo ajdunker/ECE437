@@ -51,6 +51,15 @@ module dcache
 	logic [1:0] snoop_same_tag;
 	logic pick_frame;
 
+	logic [31:0] linkReg;
+  	logic [31:0] n_linkReg;
+  	logic link_valid;
+  	logic n_link_valid;	
+
+  	logic canstore;
+  	assign canstore = (dcif.datomic) ? ((linkReg != dcif.dmemaddr || link_valid == 0) ? 0 : 1): 1;
+
+
 	integer i;
 	always_ff @(posedge CLK, negedge nRST) begin
 		if (!nRST) begin
@@ -67,6 +76,8 @@ module dcache
 			setCount <= '0;
 			wayCount <= '0;
 			cacheReg <= '0;
+			linkReg <= '0;
+			link_valid <= '0;
 		end else begin
 			cacheReg <= n_cacheReg;
 			state <= n_state;
@@ -77,6 +88,8 @@ module dcache
 			missCount <= n_missCount;
 			setCount <= nextSetCount;
 			wayCount <= nextWayCount;
+			link_valid <= n_link_valid;
+			linkReg <= n_linkReg;
 		end
 	end
  
@@ -303,9 +316,20 @@ module dcache
 		cif.ccwrite = 0;
 		cif.cctrans = 0;
 
+		dcif.state_atomic = 2'b10;
+		n_link_valid = link_valid;
+		n_linkReg = linkReg;
+
 		casez (state)
 			IDLE : begin
 				if(dcif.dmemREN && !cif.ccwait) begin
+					
+					//LL
+					if (dcif.datomic) begin
+						n_linkReg = dcif.dmemaddr;
+						n_link_valid = 1;
+					end
+
 					if(d_same_tag != 2'b10) begin
 						if (d_same_tag == 2'b00 && validCheck0 == 1) begin 
 							//cif.cctrans = 1;
@@ -355,15 +379,41 @@ module dcache
 						end
 					end
 				end else if (dcif.dmemWEN && !cif.ccwait) begin
-					if (d_same_tag == 2'b00 && validCheck0) begin
+			        if(dcif.datomic == 0 && dcif.dmemaddr == linkReg) begin
+			        	n_link_valid = 0;
+			        end
+
+			        if (canstore == 0) begin
+			        	dcif.dhit = 1;
+			        	dcif.state_atomic = 2'b00;
+			        	dcif.dmemload = 0;
+			        	n_link_valid = 0;
+			        end else if (d_same_tag == 2'b00 && validCheck0) begin
 						//cif.cctrans = 1;
+
+						//SC
+			            if (dcif.datomic) begin
+			            	dcif.state_atomic = 2'b01;
+			              	dcif.dmemload = 1;
+			            end
+			              	n_link_valid = 0;
+			              	//n_cacheReg[0][d_index][91] = 0;
+			            //end
+
+			            /*if (cccofreetomove)
+			            begin
+			                dcif.dhit = 1;
+			                n_d_state = IDLE;    
+			            end*/
+
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 1;
-						if(validCheck0==1) begin
-							n_hitCount=hitCount + 1; //add to hit counter
+						if(validCheck0 == 1) begin
+							n_hitCount = hitCount + 1; //add to hit counter
 						end
+
 						if(acc_map[d_index] == d_same_tag) begin
-							n_acc_map[d_index]=acc_map[d_index]+1;
+							n_acc_map[d_index] = acc_map[d_index]+1;
 						end
 						n_cacheReg[0][d_index][90] = 1;
 						//n_cacheReg[0][d_index][91] = 1;
@@ -374,6 +424,22 @@ module dcache
 						end
 					end else if (d_same_tag == 2'b01 && validCheck1) begin
 						//cif.cctrans = 1;
+
+						//SC
+			            if (dcif.datomic) begin
+			              	dcif.state_atomic = 2'b01;
+			              	dcif.dmemload = 1;
+			            end
+			              	n_link_valid = 0;
+			              	//n_cacheReg[1][d_index][91] = 0;
+			            //end
+
+			            /*if (cccofreetomove)
+			            begin
+			                dcif.dhit = 1;
+			                n_d_state = IDLE;    
+			            end*/
+
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 0;
 
@@ -402,7 +468,7 @@ module dcache
 							n_acc_map[d_index] = 0;
 						end else if (!dirtyCheck1) begin
 							n_acc_map[d_index] = 1;
-						end
+						end 
 						//cif.cctrans = 1;
 					end
 				end
@@ -536,10 +602,17 @@ module dcache
 
 			SNOOP : begin
 				cif.cctrans = 1;
-				if (cif.ccinv)
+				if (cif.ccsnoopaddr == linkReg) begin
+					n_link_valid = 0;
+				end
+
+				if (cif.ccinv) begin
 					n_cacheReg[pick_frame][snoop_index][91] = 0;
-				if ((snoop_same_tag != 2'b10) && cacheReg[snoop_same_tag][snoop_index][90])
+				end
+
+				if ((snoop_same_tag != 2'b10) && cacheReg[snoop_same_tag][snoop_index][90]) begin
 					cif.ccwrite = 1;
+				end
 				/*if (snoop_same_tag != 2'b10) begin //tag found
 					if (cif.ccinv && !cacheReg[snoop_same_tag][snoop_index][90]) begin // S ->  I
 						cif.cctrans = 1;

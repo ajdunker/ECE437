@@ -209,8 +209,8 @@ begin
 		end
 
 		LL : begin
-			cuif.ALUOP = ALU_ADD;
-			cuif.ALUSrc = 3'b001;
+			cuif.alu_op = ALU_ADD;
+			cuif.ALUsrc = 3'b001;
 			cuif.RegWen = 1;
 			cuif.RegDest = 2'b01;
 			cuif.mem2reg = 1;
@@ -218,8 +218,8 @@ begin
 		end
 
 		SC : begin
-			cuif.ALUOP = ALU_ADD;
-			cuif.ALUSrc = 3'b001;
+			cuif.alu_op = ALU_ADD;
+			cuif.ALUsrc = 3'b001;
 			cuif.RegWen = 1;
 			cuif.RegDest = 2'b01;
 			cuif.MemWrite = 1;

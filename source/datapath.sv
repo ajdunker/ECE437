@@ -210,20 +210,31 @@ module datapath (
       end
 
       1 : begin
-        if (pmif.MEM_mem2reg_OUT) begin
+        //if (pmif.MEM_mem2reg_OUT) begin
+          //peif.EX_wdat_IN = pmif.MEM_rdat_OUT;
+        //end else 
+          //peif.EX_wdat_IN = pmif.MEM_state_atomic_OUT;
+
+        if (pmif.MEM_mem2reg_OUT == 1) begin
           peif.EX_wdat_IN = pmif.MEM_rdat_OUT;
-        end else if (dpif.state_atomic == 2'b10) begin
-          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
+        end else if (pmif.MEM_state_atomic_OUT != 2'b10) begin
+          peif.EX_wdat_IN = pmif.MEM_state_atomic_OUT;
         end else begin
           peif.EX_wdat_IN = pmif.MEM_result_OUT;
         end
       end
 
       2 : begin
-        if (dpif.state_atomic == 2'b10) begin
-          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
-        end else begin
+        /*if (dpif.state_atomic == 2'b10) begin
           peif.EX_wdat_IN = peif.EX_result_OUT;
+        end else begin
+          peif.EX_wdat_IN = dpif.state_atomic;
+        end*/
+
+        if (dpif.state_atomic == 2'b10) begin
+          peif.EX_wdat_IN = peif.EX_result_OUT;
+        end else begin
+          peif.EX_wdat_IN = dpif.state_atomic;
         end
       end
     endcase
@@ -273,10 +284,10 @@ module datapath (
 
       //******************AFFECTED BY ATOMIC 
       1 : begin
-        if (pmif.MEM_mem2reg_OUT) begin
+        if (pmif.MEM_mem2reg_OUT == 1) begin
           alif.port_a = pmif.MEM_rdat_OUT;
-        end else if (dpif.state_atomic == 2'b10) begin
-          peif.EX_wdat_IN = plif.MEM_state_atomic_OUT;
+        end else if (dpif.state_atomic != 2'b10) begin
+          alif.port_a = pmif.MEM_state_atomic_OUT;
         end else begin
           alif.port_a = pmif.MEM_result_OUT;
         end
@@ -344,7 +355,7 @@ module datapath (
   assign dpif.dmemWEN = peif.EX_MemWrite_OUT;
   assign dpif.dmemstore = peif.EX_wdat_OUT;
   assign dpif.dmemaddr = peif.EX_result_OUT;
-  assign dpif.datomic = pmif.EX_atomic_OUT;
+  assign dpif.datomic = peif.EX_atomic_OUT;
 
 
 endmodule
