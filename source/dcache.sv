@@ -14,7 +14,7 @@ import cpu_types_pkg::*;
 module dcache 
 (
 	input logic CLK, nRST,
-	datapath_cache_if dcif,
+	datapath_cache_if.dcache dcif,
 	caches_if cif
 );
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH, SNOOP, SN_WB1, SN_WB2} state_type;
