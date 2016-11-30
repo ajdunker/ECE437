@@ -10,11 +10,11 @@
 	ori		$s0, $0, 256		# total num
 	ori		$s1, $0, 0			# values to generate
 	ori		$s2, $0, 0			# value
-	ori		$s3, $0, 0xbabe	# seed
+	ori		$s3, $0, 0xbabe		# seed
 	ori 	$s4, $0, 0			# the bufferhead
 	ori		$s5, $0, 0			# buffer size
-	ori		$s6, $0, 10		# max buffer size
-	ori		$s7, $0, 40		# buffer head end
+	ori		$s6, $0, 10			# max buffer size
+	ori		$s7, $0, 40			# buffer head end
 
 producer:
 	lw		$s5, buffSZ($0)		# load size
