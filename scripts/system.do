@@ -51,7 +51,6 @@ add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ramstate
 add wave -noupdate -expand -group ccif /system_tb/DUT/CPU/ccif/ramstore
 add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/cacheValues
 add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/data_stored
-add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/i
 add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/index
 add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/instruction
 add wave -noupdate -group icache0 /system_tb/DUT/CPU/CM0/ICACHE/nRST
@@ -105,7 +104,6 @@ add wave -noupdate -group dcache0 /system_tb/DUT/CPU/CM0/DCACHE/validCheck1
 add wave -noupdate -group dcache0 /system_tb/DUT/CPU/CM0/DCACHE/wayCount
 add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/cacheValues
 add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/data_stored
-add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/i
 add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/index
 add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/instruction
 add wave -noupdate -group icache1 /system_tb/DUT/CPU/CM1/ICACHE/nRST
@@ -157,8 +155,12 @@ add wave -noupdate -group dcache1 /system_tb/DUT/CPU/CM1/DCACHE/test
 add wave -noupdate -group dcache1 /system_tb/DUT/CPU/CM1/DCACHE/validCheck0
 add wave -noupdate -group dcache1 /system_tb/DUT/CPU/CM1/DCACHE/validCheck1
 add wave -noupdate -group dcache1 /system_tb/DUT/CPU/CM1/DCACHE/wayCount
+add wave -noupdate /system_tb/DUT/CPU/DP0/next_pc
+add wave -noupdate -expand /system_tb/DUT/CPU/DP0/RF/register
+add wave -noupdate /system_tb/DUT/CPU/DP1/next_pc
+add wave -noupdate -expand /system_tb/DUT/CPU/DP1/RF/register
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {920467 ps} 0}
+WaveRestoreCursors {{Cursor 1} {6360000 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -174,4 +176,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {4808156 ps}
+WaveRestoreZoom {5638 ns} {7162 ns}

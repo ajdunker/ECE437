@@ -137,7 +137,7 @@ module dcache
 				if (cif.ccwait) begin
 					n_state = SNOOP;
 				end else if (dcif.dmemREN && !cif.ccwait) begin
-					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) & (validCheck0 | validCheck1)) begin
+					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) && (validCheck0 | validCheck1)) begin
 						n_state = IDLE;
 					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
 						n_state = ALLOCATE1;
@@ -156,9 +156,9 @@ module dcache
 							n_state = WBACK1;
 						end
 					end*/
-					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) & (validCheck0 | validCheck1)) begin
+					if ((d_same_tag == 2'b00 || d_same_tag == 2'b01) && (validCheck0 || validCheck1) && (dirtyCheck0 || dirtyCheck1)) begin
 						n_state = IDLE;
-					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
+					end else if ((!validCheck0 | !validCheck1)) begin
 						n_state = ALLOCATE1;
 					end else if (dcif.halt) begin
 						n_state = FLUSH1;
@@ -359,7 +359,7 @@ module dcache
 						end
 					end
 				end else if (dcif.dmemWEN && !cif.ccwait) begin
-					if (d_same_tag == 2'b00 && validCheck0) begin
+					if (d_same_tag == 2'b00 && validCheck0 && dirtyCheck0) begin
 						//cif.cctrans = 1;
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 1;
@@ -369,14 +369,14 @@ module dcache
 						if(acc_map[d_index] == d_same_tag) begin
 							n_acc_map[d_index]=acc_map[d_index]+1;
 						end
-						n_cacheReg[0][d_index][90] = 1;
+						//n_cacheReg[0][d_index][90] = 1;
 						//n_cacheReg[0][d_index][91] = 1;
 						if (dcif.dmemaddr[2] == 1) begin
 							n_cacheReg[0][d_index][63:32] = dcif.dmemstore;
 						end else begin
 							n_cacheReg[0][d_index][31:0] = dcif.dmemstore;  
 						end
-					end else if (d_same_tag == 2'b01 && validCheck1) begin
+					end else if (d_same_tag == 2'b01 && validCheck1 && dirtyCheck1) begin
 						//cif.cctrans = 1;
 						dcif.dhit = 1;
 						n_acc_map[d_index] = 0;
@@ -389,7 +389,7 @@ module dcache
 							n_acc_map[d_index] = acc_map[d_index] + 1;
 						end
 
-						n_cacheReg[1][d_index][90] = 1;
+						//n_cacheReg[1][d_index][90] = 1;
 						//n_cacheReg[1][d_index][91] = 1;
 
 						if(dcif.dmemaddr[2] == 1) begin
@@ -453,6 +453,15 @@ module dcache
 					n_acc_map[d_index] = ~acc_map[d_index];
 					//dcif.dhit = 1;
 					n_missCount = missCount + 1;
+					if (dcif.dmemWEN) begin
+						if (d_same_tag == 2'b00) begin
+							n_cacheReg[0][d_index][90] = 1;
+							n_acc_map[d_index] = 0;
+						end else if (d_same_tag == 2'b01) begin
+							n_cacheReg[1][d_index][90] = 1;
+							n_acc_map[d_index] = 1;
+						end
+					end
 					//if(d_other_addr[2]) begin
 						n_cacheReg[acc_map[d_index]][d_index][63:32] = cif.dload;
 					//end else begin
