@@ -17,11 +17,6 @@ module dcache
 	datapath_cache_if dcif,
 	caches_if cif
 );
-	
-
-	
-
-
 	typedef enum {IDLE, ALLOCATE1, ALLOCATE2, WBACK1, WBACK2, FLUSH1, FLUSH2, HIT_CNT, END_FLUSH, SNOOP, SN_WB1, SN_WB2} state_type;
 	state_type state, n_state;
 
@@ -137,7 +132,7 @@ module dcache
 				if (cif.ccwait) begin
 					n_state = SNOOP;
 				end else if (dcif.dmemREN && !cif.ccwait) begin
-					if ((d_same_tag == 2'b00 | d_same_tag == 2'b01) && (validCheck0 | validCheck1)) begin
+					if ((d_same_tag == 2'b00  && validCheck0) || (d_same_tag == 2'b01 && validCheck1)) begin
 						n_state = IDLE;
 					end else if ((!validCheck0 | !validCheck1 | !dirtyCheck0 | !dirtyCheck1)) begin
 						n_state = ALLOCATE1;
@@ -156,7 +151,7 @@ module dcache
 							n_state = WBACK1;
 						end
 					end*/
-					if ((d_same_tag == 2'b00 || d_same_tag == 2'b01) && (validCheck0 || validCheck1) && (dirtyCheck0 || dirtyCheck1)) begin
+					if ((d_same_tag == 2'b00 &&  validCheck0 && dirtyCheck0) || (d_same_tag == 2'b01 && validCheck1 && dirtyCheck1)) begin
 						n_state = IDLE;
 					end else if ((!validCheck0 | !validCheck1)) begin
 						n_state = ALLOCATE1;
@@ -542,7 +537,11 @@ module dcache
 			END_FLUSH: begin
 				cif.dREN = 0;
 				cif.dWEN = 0;
-				cif.cctrans= 1;
+				if (cif.ccwait) begin
+					cif.cctrans = 1;
+				end else begin
+					cif.cctrans = 0;
+				end
 				n_flushReg = 1;
 				cif.daddr = word_t'('0);
 			end

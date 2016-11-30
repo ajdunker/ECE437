@@ -135,12 +135,25 @@ org 0x400
 flag:
 cfw 0
 size:
-cfw 4
+cfw 17
 data:
 cfw 90
 cfw 81
 cfw 51
 cfw 25
+cfw 80
+cfw 41
+cfw 22
+cfw 21
+cfw 12
+cfw 62
+cfw 75
+cfw 71
+cfw 83
+cfw 81
+cfw 77
+cfw 22
+cfw 11
 
 org 0x600
 sorted:
