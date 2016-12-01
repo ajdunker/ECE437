@@ -43,7 +43,7 @@ interface datapath_cache_if;
   modport cache (
     input   halt, imemREN, dmemREN, dmemWEN, datomic,
             dmemstore, dmemaddr, imemaddr,
-    output  ihit, dhit, imemload, dmemload, flushed
+    output  ihit, dhit, imemload, dmemload, flushed, state_atomic
   );
 
   // icache ports

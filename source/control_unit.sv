@@ -224,7 +224,6 @@ begin
 			cuif.RegDest = 2'b01;
 			cuif.MemWrite = 1;
 			cuif.atomic = 1;
-			cuif.rt_check = 1;
 		end
 
 		HALT : begin
