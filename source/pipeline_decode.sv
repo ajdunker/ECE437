@@ -37,7 +37,6 @@ module pipeline_decode (
 	logic ID_MemWrite;
 	logic ID_careOF;
 	logic ID_halt;
-	logic ID_atomic;
 
 	always_ff @(posedge CLK or negedge nRST) begin
 		if(nRST == 0) begin
@@ -56,7 +55,6 @@ module pipeline_decode (
 			ID_careOF <= 0;
 			ID_halt <= 0;
 			ID_ALUsrc <= 0;
-			ID_atomic <= 0;
 		end else begin
 			if (huif.hit_check && !huif.hit_check2) begin
 				if(huif.stall || pfif.flush) begin
@@ -75,7 +73,6 @@ module pipeline_decode (
 					ID_careOF <= 0;
 					ID_halt <= 0;
 					ID_ALUsrc <= 0;
-					ID_atomic <= 0;
 				end else begin
 					ID_Instr <= pfif.IF_Instr_OUT;
 					ID_npc <= pfif.IF_npc_OUT;
@@ -92,7 +89,6 @@ module pipeline_decode (
 					ID_careOF <= pdif.ID_careOF_IN;
 					ID_halt <= pdif.ID_halt_IN;
 					ID_ALUsrc <= pdif.ID_ALUsrc_IN;
-					ID_atomic <= pdif.ID_atomic_IN;
 				end
 			end
 		end
@@ -113,6 +109,5 @@ module pipeline_decode (
 	assign pdif.ID_careOF_OUT = ID_careOF;
 	assign pdif.ID_halt_OUT = ID_halt;
 	assign pdif.ID_ALUsrc_OUT = ID_ALUsrc;
-	assign pdif.ID_atomic_OUT = ID_atomic;
 
 endmodule // pipeline_decode

@@ -26,8 +26,6 @@ import cpu_types_pkg::*;
 	logic MEM_pc2reg_IN;
 	logic MEM_mem2reg_IN;
 	logic MEM_halt_IN;
-	logic MEM_atomic_IN;
-	logic [1:0] MEM_state_atomic_IN;
 
 	//fetch outputs
 	logic [31:0] MEM_npc_OUT;
@@ -38,8 +36,6 @@ import cpu_types_pkg::*;
 	logic MEM_pc2reg_OUT;
 	logic MEM_mem2reg_OUT;
 	logic MEM_halt_OUT;
-	logic MEM_atomic_OUT;
-	logic [1:0] MEM_state_atomic_OUT;
 
 endinterface
 
